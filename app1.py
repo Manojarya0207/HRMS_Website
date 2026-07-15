@@ -1778,7 +1778,7 @@ def admin_sub_expense_types():
                          edit_type=edit_type)
 
 @app.route('/admin/delete_sub_expense_type/<int:sub_et_id>')
-def delete_sub_expense_type(sub_et_id):
+def delete_sub_expense_type(sub_et_id):   
     if 'user_id' not in session or session['emp_type'] != 'admin':
         return redirect(url_for('login'))
     db.delete_sub_expense_type(sub_et_id)
