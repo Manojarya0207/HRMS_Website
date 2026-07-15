@@ -16,7 +16,7 @@ from datetime import datetime
 import calendar
 
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder='templates1')
 app.secret_key = 'your-secret-key-change-this-in-production'
 db = Database()
 
