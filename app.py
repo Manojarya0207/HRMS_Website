@@ -184,7 +184,7 @@ def register():
         except Exception as e:
             flash('Error submitting registration request. Email may already exist.', 'error')
             
-    return render_template('register.html')
+    return render_template('auth/register.html')
 
 @app.route('/api/check-registration-status', methods=['POST'])
 def api_check_registration_status():
@@ -227,8 +227,8 @@ def login():
         
         if user:
             session['user_id'] = user[0]
-            session['first_name'] = user[1]
-            session['last_name'] = user[2]
+            session['first_name'] = user[1].title() if user[1] else ''
+            session['last_name'] = user[2].title() if user[2] else ''
             session['emp_type'] = user[3]
             
             if user[3] == 'admin':
@@ -238,7 +238,7 @@ def login():
         else:
             flash('Invalid email or password', 'error')
     
-    return render_template('login.html')
+    return render_template('auth/login.html')
 
 @app.route('/logout', methods=['POST'])
 def logout():
@@ -265,7 +265,7 @@ def admin_dashboard():
     # Calculate total pages
     total_pages = math.ceil(total_tasks / page_size)
     
-    return render_template('admin_dashboard.html', 
+    return render_template('dashboard/admin_dashboard.html', 
                          tasks=tasks, 
                          employees=employees, 
                          projects=projects, 
@@ -284,7 +284,7 @@ def registration_requests():
     
     status_filter = request.args.get('status', 'pending')
     reqs = db.get_registration_requests(status=status_filter)
-    return render_template('registration_requests.html', requests=reqs, status_filter=status_filter)
+    return render_template('employees/registration_requests.html', requests=reqs, status_filter=status_filter)
 
 @app.route('/admin/reject_registration/<int:req_id>')
 def reject_registration(req_id):
@@ -320,7 +320,7 @@ def view_employees():
     status_filter = request.args.get('status_filter', 'all')
     employees = db.get_employees(status_filter=status_filter)
     
-    return render_template('view_employees.html', employees=employees, status_filter=status_filter)
+    return render_template('employees/view_employees.html', employees=employees, status_filter=status_filter)
 
 @app.route('/admin/edit_employee/<int:emp_id>', methods=['GET', 'POST'])
 def edit_employee(emp_id):
@@ -354,7 +354,7 @@ def edit_employee(emp_id):
             flash('Error updating employee. Email might already exist.', 'error')
     
     employee_statuses = db.get_employee_statuses()
-    return render_template('edit_employee.html', employee=employee, employee_statuses=employee_statuses)
+    return render_template('employees/edit_employee.html', employee=employee, employee_statuses=employee_statuses)
 
 @app.route('/admin/delete_employee/<int:emp_id>')
 def delete_employee(emp_id):
@@ -419,7 +419,7 @@ def add_employee():
             prefill = employee_data
             
     employee_statuses = db.get_employee_statuses()
-    return render_template('add_employee.html', prefill=prefill, req_id=req_id, employee_statuses=employee_statuses)
+    return render_template('employees/add_employee.html', prefill=prefill, req_id=req_id, employee_statuses=employee_statuses)
 
 @app.route('/admin/view_projects')
 def view_projects():
@@ -427,7 +427,7 @@ def view_projects():
         return redirect(url_for('login'))
     
     projects = db.get_projects()
-    return render_template('view_projects.html', projects=projects)
+    return render_template('projects/view_projects.html', projects=projects)
 
 @app.route('/admin/view_project/<int:project_id>')
 def view_project(project_id):
@@ -440,7 +440,7 @@ def view_project(project_id):
         return redirect(url_for('view_projects'))
     
     tasks = db.get_tasks_by_project(project_id)
-    return render_template('view_project.html', project=project, tasks=tasks)
+    return render_template('projects/view_project.html', project=project, tasks=tasks)
 
 @app.route('/admin/edit_project/<int:project_id>', methods=['GET', 'POST'])
 def edit_project(project_id):
@@ -469,7 +469,7 @@ def edit_project(project_id):
         except Exception as e:
             flash('Error updating project.', 'error')
     
-    return render_template('edit_project.html', project=project)
+    return render_template('projects/edit_project.html', project=project)
 
 @app.route('/admin/delete_project/<int:project_id>')
 def delete_project(project_id):
@@ -506,7 +506,7 @@ def add_project():
         except Exception as e:
             flash('Error adding project.', 'error')
     
-    return render_template('add_project.html')
+    return render_template('projects/add_project.html')
 
 @app.route('/admin/view_tasks')
 def view_tasks():
@@ -528,7 +528,7 @@ def view_tasks():
     # Calculate total pages
     total_pages = math.ceil(total_tasks / page_size)
     
-    return render_template('view_tasks.html', 
+    return render_template('tasks/view_tasks.html', 
                          tasks=tasks, 
                          employees=employees, 
                          projects=projects, 
@@ -571,7 +571,7 @@ def edit_task(task_id):
     projects = db.get_projects()
     employees = db.get_employees()
     task_statuses = db.get_task_statuses()
-    return render_template('edit_task.html', task=task, projects=projects, employees=employees, task_statuses=task_statuses)
+    return render_template('tasks/edit_task.html', task=task, projects=projects, employees=employees, task_statuses=task_statuses)
 
 @app.route('/admin/delete_task/<int:task_id>')
 def delete_task(task_id):
@@ -613,7 +613,7 @@ def add_task():
     employees = db.get_employees()
     today = date.today().isoformat()  # format: 'YYYY-MM-DD'
     task_statuses = db.get_task_statuses()
-    return render_template('add_task.html', projects=projects, employees=employees, today=today, task_statuses=task_statuses)
+    return render_template('tasks/add_task.html', projects=projects, employees=employees, today=today, task_statuses=task_statuses)
 
 @app.route('/employee/dashboard')
 def employee_dashboard():
@@ -636,7 +636,7 @@ def employee_dashboard():
     status_filter = request.args.get('status_filter', 'all')
     tasks = db.get_tasks_by_employee(session['user_id'], status_filter=status_filter)
     today = date.today()  # Get current date
-    return render_template('employee_dashboard.html', tasks=tasks, emg_missing=emg_missing, status_filter=status_filter, today=today)
+    return render_template('dashboard/employee_dashboard.html', tasks=tasks, emg_missing=emg_missing, status_filter=status_filter, today=today)
 
 @app.route('/employee/my_profile', methods=['GET', 'POST'])
 def employee_profile_view():
@@ -681,7 +681,7 @@ def employee_profile_view():
         flash(alert_msg)  # Requires flash setup in app
         return redirect(url_for('employee_dashboard'))
 
-    return render_template('my_profile.html', employee=employee, profile=profile, alert_msg=alert_msg)
+    return render_template('employees/my_profile.html', employee=employee, profile=profile, alert_msg=alert_msg)
 
 @app.route('/admin/employee_profile/<int:emp_id>', methods=['GET', 'POST'])
 def manage_profile(emp_id):
@@ -720,7 +720,7 @@ def manage_profile(emp_id):
         return redirect(url_for('view_employees'))
         
 
-    return render_template('employee_profile.html', employee=employee, profile=profile)
+    return render_template('employees/employee_profile.html', employee=employee, profile=profile)
 
 @app.route('/employee/add_task_detail', methods=['POST'])
 def add_task_detail():
@@ -756,7 +756,7 @@ def view_task_details(task_id):
     
     details = db.get_task_details_by_employee(task_id, session['user_id'])
     project = db.get_project(task[2])  # Get project details for task
-    return render_template('view_task_details.html', task=task, details=details, project=project)
+    return render_template('tasks/view_task_details.html', task=task, details=details, project=project)
 
 @app.route('/employee/edit_task_detail/<int:detail_id>', methods=['GET', 'POST'])
 def edit_task_detail(detail_id):
@@ -779,7 +779,7 @@ def edit_task_detail(detail_id):
         except Exception as e:
             flash('Error editing task update.', 'error')
     
-    return render_template('edit_task_detail.html', detail=detail, task_id=detail[1])
+    return render_template('tasks/edit_task_detail.html', detail=detail, task_id=detail[1])
 
 @app.route('/employee/daily_tasks', methods=['GET', 'POST'])
 def employee_daily_tasks():
@@ -814,7 +814,7 @@ def employee_daily_tasks():
             return redirect(url_for('employee_daily_tasks'))
             
     daily_tasks = db.get_daily_tasks_by_employee(session['user_id'])
-    return render_template('employee_daily_tasks.html', daily_tasks=daily_tasks, statuses=statuses)
+    return render_template('tasks/employee_daily_tasks.html', daily_tasks=daily_tasks, statuses=statuses)
 
 @app.route('/employee/daily_task/edit/<int:task_id>', methods=['GET', 'POST'])
 def edit_daily_task(task_id):
@@ -848,7 +848,7 @@ def edit_daily_task(task_id):
             flash("Daily task updated successfully!", "success")
             return redirect(url_for('employee_daily_tasks'))
             
-    return render_template('edit_daily_task.html', task=task, statuses=statuses)
+    return render_template('tasks/edit_daily_task.html', task=task, statuses=statuses)
 
 @app.route('/admin/daily_tasks')
 def admin_daily_tasks():
@@ -856,7 +856,7 @@ def admin_daily_tasks():
         return redirect(url_for('login'))
         
     daily_tasks = db.get_all_daily_tasks()
-    return render_template('admin_daily_tasks.html', daily_tasks=daily_tasks)
+    return render_template('tasks/admin_daily_tasks.html', daily_tasks=daily_tasks)
 
 @app.route('/admin/daily_task/feedback/<int:task_id>', methods=['POST'])
 def admin_daily_task_feedback(task_id):
@@ -914,7 +914,7 @@ def show_task_details(task_id):
     employee = db.get_employee(task[3])  # task[3] is emp_id
     task_details = db.get_task_details(task_id)  # Use existing get_task_details method
     
-    return render_template('show_task_details.html', task=task, project=project, employee=employee, task_details=task_details)
+    return render_template('tasks/show_task_details.html', task=task, project=project, employee=employee, task_details=task_details)
 
 # ------ Leave types ----------------------------------
 @app.route('/admin/leave_types', methods=['GET', 'POST'])
@@ -949,7 +949,7 @@ def admin_leave_types():
     else:
         leave_types_all = db.get_leave_types()
 
-    return render_template('admin_leave_types.html',
+    return render_template('leave/admin_leave_types.html',
                            leave_types=leave_types_all,
                            popup_message=popup_message,
                            popup_type=popup_type,
@@ -1011,7 +1011,7 @@ def admin_leave_requests():
     employees = db.get_employees(status_filter='active')
     leave_types = db.get_leave_types()
 
-    return render_template('admin_leave_requests.html',
+    return render_template('leave/admin_leave_requests.html',
                            requests=requests,
                            page=page,
                            total_pages=total_pages,
@@ -1052,7 +1052,7 @@ def employee_leave():
     my_requests = db.get_leave_requests('WHERE lr.employee_id=?', (session['user_id'],))
     today_iso    = date.today().isoformat()          #  ← new
 
-    return render_template('employee_leave.html',
+    return render_template('leave/employee_leave.html',
                            leave_types=leave_types, my_requests=my_requests, today=today_iso                          #  ← new
 )
 
@@ -1062,7 +1062,7 @@ def employee_leave_requests():
         return redirect(url_for('login'))
 
     my_requests = db.get_leave_requests('WHERE lr.employee_id=?', (session['user_id'],))
-    return render_template('employee_leave_requests.html', my_requests=my_requests)
+    return render_template('leave/employee_leave_requests.html', my_requests=my_requests)
     
 @app.route('/admin/expense_types', methods=['GET', 'POST'])
 def admin_expense_types():
@@ -1078,7 +1078,7 @@ def admin_expense_types():
 
     types_ = db.get_expense_types()
     msg = request.args.get('msg')
-    return render_template('admin_expense_types.html', types=types_, msg=msg)
+    return render_template('expenses/admin_expense_types.html', types=types_, msg=msg)
 
 @app.route('/admin/delete_expense_type/<int:et_id>')
 def delete_expense_type(et_id):
@@ -1121,7 +1121,7 @@ def expense():
             flash('Expense date must be within the current month.', 'error')
             types = db.get_expense_types()
             employees = db.get_employees()
-            return render_template('expense.html', types=types, employees=employees)
+            return render_template('expenses/expense.html', types=types, employees=employees)
         
         # Handle file upload
         invoice_path = None
@@ -1174,7 +1174,7 @@ def expense():
     import calendar
     last_day = today.replace(day=calendar.monthrange(today.year, today.month)[1])
     
-    return render_template('expense.html', 
+    return render_template('expenses/expense.html', 
                          types=types, 
                          employees=employees,
                          min_date=first_day.isoformat(),
@@ -1269,7 +1269,7 @@ def existing_expenses():
 
     total_pages = math.ceil(total / per_page)
 
-    return render_template('existing_expenses.html',
+    return render_template('expenses/existing_expenses.html',
                            expenses=converted_expenses,
                            expense_types=expense_types,
                            employees=employees,
@@ -1495,7 +1495,7 @@ def admin_leave_summary():
                         leave_type_id = f_leave_type or None
                     )
 
-    return render_template('admin_leave_summary.html',
+    return render_template('leave/admin_leave_summary.html',
                            leave_types = leave_types,
                            summary     = summary,
                            f_date_from = f_date_from,
@@ -1541,14 +1541,14 @@ def add_job():
         conn.commit()
         conn.close()
         return redirect(url_for('view_jobs'))
-    return render_template('add_job.html')
+    return render_template('careers/add_job.html')
 
 @app.route('/admin/view_jobs')
 def view_jobs():
     conn = get_db_connection()
     jobs = conn.execute('SELECT * FROM TblCareers').fetchall()
     conn.close()
-    return render_template('view_jobs.html', jobs=jobs)
+    return render_template('careers/view_jobs.html', jobs=jobs)
 
 @app.route('/admin/delete_job/<int:id>')
 def delete_job(id):
@@ -1591,14 +1591,14 @@ def edit_job(id):
         return redirect(url_for('view_jobs'))
     
     conn.close()
-    return render_template('edit_job.html', job=job)
+    return render_template('careers/edit_job.html', job=job)
 
 @app.route('/employee/careers')
 def employee_careers():
     conn = get_db_connection()
     jobs = conn.execute('SELECT * FROM TblCareers').fetchall()
     conn.close()
-    return render_template('employee_careers.html', jobs=jobs)
+    return render_template('careers/employee_careers.html', jobs=jobs)
 
 @app.route('/admin/add_asset', methods=['GET', 'POST'])
 def add_asset():
@@ -1612,7 +1612,7 @@ def add_asset():
         conn.close()
         flash('Asset added successfully!', 'success')
         return redirect(url_for('view_assets'))
-    return render_template('add_asset.html')
+    return render_template('assets/add_asset.html')
 
 @app.route('/admin/view_assets')
 def view_assets():
@@ -1621,7 +1621,7 @@ def view_assets():
     conn = get_db_connection()
     assets = conn.execute('SELECT * FROM TblAssets').fetchall()
     conn.close()
-    return render_template('view_assets.html', assets=assets)
+    return render_template('assets/view_assets.html', assets=assets)
 
 @app.route('/admin/edit_asset/<int:asset_id>', methods=['GET', 'POST'])
 def edit_asset(asset_id):
@@ -1637,7 +1637,7 @@ def edit_asset(asset_id):
         flash('Asset updated successfully!', 'success')
         return redirect(url_for('view_assets'))
     conn.close()
-    return render_template('edit_asset.html', asset=asset)
+    return render_template('assets/edit_asset.html', asset=asset)
 
 @app.route('/admin/delete_asset/<int:asset_id>')
 def delete_asset(asset_id):
@@ -1678,7 +1678,7 @@ def allocate_asset():
         return redirect(url_for('manage_allocation'))
 
     return render_template(
-        'allocate_asset.html',
+        'assets/allocate_asset.html',
         assets=assets,
         employees=employees,
         selected_asset_id=selected_asset_id
@@ -1699,7 +1699,7 @@ def manage_allocation():
         JOIN tbl_employee e ON aa.EmployeeId = e.emp_id
         ORDER BY aa.AllocateDate DESC
     ''').fetchall()
-    return render_template('manage_allocation.html', allocations=rows)
+    return render_template('assets/manage_allocation.html', allocations=rows)
 
 @app.route('/admin/edit_allocation/<int:alloc_id>', methods=['GET', 'POST'])
 def edit_allocation(alloc_id):
@@ -1720,7 +1720,7 @@ def edit_allocation(alloc_id):
         flash("Asset returned", "success")
         return redirect(url_for('manage_allocation'))
 
-    return render_template('edit_allocation.html', allocation=allocation)
+    return render_template('assets/edit_allocation.html', allocation=allocation)
 
 @app.route('/admin/asset_history', methods=['GET'])
 def asset_history():
@@ -1735,7 +1735,7 @@ def asset_history():
             WHERE aa.EmployeeId = ?
             ORDER BY aa.AllocateDate DESC
         ''', (selected_emp_id,)).fetchall()
-    return render_template('asset_history.html', employees=employees, history=history, selected_emp_id=selected_emp_id)
+    return render_template('assets/asset_history.html', employees=employees, history=history, selected_emp_id=selected_emp_id)
 
 @app.route('/employee/assets')
 def employee_assets():
@@ -1767,7 +1767,7 @@ def employee_assets():
         else:
             open_issues_by_asset.setdefault(i['AssetId'], []).append(i)
 
-    return render_template('employee_assets.html',
+    return render_template('assets/employee_assets.html',
                            assets=assets,
                            open_issues_by_asset=open_issues_by_asset,
                            resolved_issues_by_asset=resolved_issues_by_asset)
@@ -1855,7 +1855,7 @@ def admin_quick_delete():
         data = db.get_sub_expense_types()
     
 
-    return render_template('admin_quick_delete.html', category=category, data=data)
+    return render_template('admin/admin_quick_delete.html', category=category, data=data)
 
 @app.route('/admin/delete_all/<category>', methods=['POST'])
 def delete_all_category(category):
@@ -1897,7 +1897,7 @@ def admin_wiki_categories():
         return redirect(url_for('admin_wiki_categories', msg=f'"{category}" saved'))
     cats = db.get_wiki_categories()
     msg = request.args.get('msg')
-    return render_template('admin_wiki_category.html', cats=cats, msg=msg)
+    return render_template('wiki/admin_wiki_category.html', cats=cats, msg=msg)
 
 @app.route('/admin/edit_wiki_category/<int:cat_id>', methods=['POST'])
 def edit_wiki_category(cat_id):
@@ -1936,14 +1936,14 @@ def add_wiki():
         flash(f'Wiki "{title}" added.', 'success')
         return redirect(url_for('view_wikis'))
     categories = db.get_wiki_categories()
-    return render_template('add_wiki.html', categories=categories)
+    return render_template('wiki/add_wiki.html', categories=categories)
 
 @app.route('/admin/view_wikis')
 def view_wikis():
     if 'user_id' not in session or session['emp_type'] != 'admin':
         return redirect(url_for('login'))
     wikis = db.get_wiki_pages()
-    return render_template('view_wikis.html', wikis=wikis)
+    return render_template('wiki/view_wikis.html', wikis=wikis)
 
 @app.route('/admin/edit_wiki/<int:wiki_id>', methods=['GET', 'POST'])
 def edit_wiki(wiki_id):
@@ -1961,7 +1961,7 @@ def edit_wiki(wiki_id):
         flash(f'Wiki "{title}" updated.', 'success')
         return redirect(url_for('view_wikis'))
     categories = db.get_wiki_categories()
-    return render_template('edit_wiki.html', page=page, categories=categories)
+    return render_template('wiki/edit_wiki.html', page=page, categories=categories)
 
 @app.route('/admin/delete_wiki/<int:wiki_id>')
 def delete_wiki(wiki_id):
@@ -1977,7 +1977,7 @@ def employee_wiki_list():
     if 'user_id' not in session or session['emp_type'] != 'emp':
         return redirect(url_for('login'))
     wikis = db.get_wiki_pages()
-    return render_template('wiki_list.html', wikis=wikis)
+    return render_template('wiki/wiki_list.html', wikis=wikis)
 
 # ------ Employee: view a single Wiki ------------
 @app.route('/employee/wiki/<int:wiki_id>')
@@ -1990,7 +1990,7 @@ def wiki_detail(wiki_id):
         return redirect(url_for('employee_wiki_list'))
     # record the view
     db.add_wiki_view(wiki_id, session['user_id'])
-    return render_template('wiki_detail.html', page=page)
+    return render_template('wiki/wiki_detail.html', page=page)
 
 # ------ Admin: view Wiki Views -----------------
 @app.route('/admin/wiki_views')
@@ -2009,7 +2009,7 @@ def admin_wiki_views():
     pages  = db.get_wiki_pages()  # for the filter dropdown
 
     return render_template(
-        'view_wiki_views.html',
+        'wiki/view_wiki_views.html',
         counts=counts,
         views=views,
         pages=pages,
@@ -2053,7 +2053,7 @@ def admin_sub_expense_types():
     sub_types_all = db.get_sub_expense_types()
     expense_types = db.get_expense_types()
     
-    return render_template('admin_sub_expense_types.html',
+    return render_template('expenses/admin_sub_expense_types.html',
                          sub_expense_types=sub_types_all,
                          expense_types=expense_types,
                          popup_message=popup_message,
@@ -2098,7 +2098,7 @@ def admin_task_statuses():
         return redirect(url_for('admin_task_statuses'))
         
     statuses = db.get_task_statuses()
-    return render_template('admin_task_statuses.html', statuses=statuses)
+    return render_template('admin/admin_task_statuses.html', statuses=statuses)
 
 @app.route('/admin/task_statuses/edit/<int:status_id>', methods=['POST'])
 def edit_task_status(status_id):
@@ -2145,7 +2145,7 @@ def admin_employee_statuses():
         return redirect(url_for('admin_employee_statuses'))
         
     statuses = db.get_employee_statuses()
-    return render_template('admin_employee_statuses.html', statuses=statuses)
+    return render_template('admin/admin_employee_statuses.html', statuses=statuses)
 
 @app.route('/admin/employee_statuses/edit/<int:status_id>', methods=['POST'])
 def edit_employee_status(status_id):

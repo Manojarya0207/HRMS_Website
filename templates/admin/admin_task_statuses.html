@@ -1,0 +1,236 @@
+{% extends 'layouts/base.html' %}
+
+{% block content %}
+<div class="w-full px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900">Task Status Master</h1>
+            <p class="text-sm text-gray-500 mt-1">Manage statuses available for employee tasks</p>
+        </div>
+        <button onclick="openAddModal()" 
+                class="inline-flex items-center gap-2 bg-[#0d7a70] hover:bg-[#0b665d] text-white font-medium py-2 px-4 rounded-md shadow-sm transition duration-150 ease-in-out">
+            <i class="fas fa-plus text-sm"></i>
+            ADD NEW STATUS
+        </button>
+    </div>
+
+    <!-- Search Box -->
+    <div class="bg-white p-4 rounded-lg shadow-sm mb-6 border border-gray-100">
+        <div class="relative rounded-md shadow-sm">
+            <input type="text" id="searchInput" onkeyup="filterTable()" 
+                   placeholder="Search by name or description..."
+                   class="block w-full border border-gray-300 rounded-md py-2.5 pl-4 pr-10 focus:outline-none focus:ring-1 focus:ring-[#0d7a70] focus:border-[#0d7a70] text-sm">
+        </div>
+    </div>
+
+    <!-- Table Card -->
+    <div class="bg-white shadow-sm rounded-lg border border-gray-100 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200" id="statusTable">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status Name</th>
+                        <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Description</th>
+                        <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Badge Preview</th>
+                        <th scope="col" class="px-6 py-3.5 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for status in statuses %}
+                    <tr class="hover:bg-gray-50/50 transition-colors">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900 status-name">
+                            {{ status[1] }}
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-500 status-desc">
+                            {{ status[2] or 'No description' }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold text-white" 
+                                  style="background-color: {{ status[3] or '#6b7280' }};">
+                                {{ status[1] }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <div class="flex justify-end gap-3">
+                                <button onclick="openEditModal({{ status[0] }}, '{{ status[1]|escape }}', '{{ (status[2] or '')|escape }}', '{{ status[3] or '#6b7280' }}')"
+                                        class="text-teal-600 hover:text-teal-900 transition-colors" title="Edit">
+                                    <i class="fas fa-pencil-alt text-base"></i>
+                                </button>
+                                <a href="javascript:void(0);" 
+                                   onclick="confirmDelete('task status', {{ status[0] }}, '{{ url_for('delete_task_status', status_id=status[0]) }}')"
+                                   class="text-red-600 hover:text-red-900 transition-colors" title="Delete">
+                                    <i class="fas fa-trash-alt text-base"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" class="px-6 py-10 text-center text-sm text-gray-500">
+                            No task statuses found.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Add / Edit Modal -->
+<div id="statusModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 overflow-hidden transform transition-all">
+        <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-white">
+            <h3 id="modalTitle" class="text-lg font-bold text-gray-900">Create Status</h3>
+            <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 focus:outline-none">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <form id="modalForm" method="POST" action="">
+            <div class="p-6 space-y-5">
+                <!-- Status Name -->
+                <div>
+                    <input type="text" name="name" id="statusName" required placeholder="Status Name"
+                           class="block w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-1 focus:ring-[#0d7a70] focus:border-[#0d7a70] text-sm">
+                </div>
+
+                <!-- Quick Presets -->
+                <div class="space-y-2">
+                    <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider block">Quick Presets:</span>
+                    <div class="flex flex-wrap gap-2">
+                        <button type="button" onclick="applyPreset('Pending', 'Task has been created but not started', '#f59e0b')"
+                                class="px-3 py-1.5 rounded-full text-xs font-medium text-white bg-[#0d7a70] hover:bg-[#0b665d] transition-colors">
+                            Pending
+                        </button>
+                        <button type="button" onclick="applyPreset('Work In Progress', 'Task is currently being worked on', '#3b82f6')"
+                                class="px-3 py-1.5 rounded-full text-xs font-medium text-white bg-[#0d7a70] hover:bg-[#0b665d] transition-colors">
+                            Work In Progress
+                        </button>
+                        <button type="button" onclick="applyPreset('Completed', 'Task has been successfully completed', '#10b981')"
+                                class="px-3 py-1.5 rounded-full text-xs font-medium text-white bg-[#0d7a70] hover:bg-[#0b665d] transition-colors">
+                            Completed
+                        </button>
+                        <button type="button" onclick="applyPreset('Blocked', 'Task is blocked by dependency or issue', '#ef4444')"
+                                class="px-3 py-1.5 rounded-full text-xs font-medium text-white bg-[#0d7a70] hover:bg-[#0b665d] transition-colors">
+                            Blocked
+                        </button>
+                        <button type="button" onclick="applyPreset('On Hold', 'Task is temporarily suspended', '#8b5cf6')"
+                                class="px-3 py-1.5 rounded-full text-xs font-medium text-white bg-[#0d7a70] hover:bg-[#0b665d] transition-colors">
+                            On Hold
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Description -->
+                <div>
+                    <textarea name="description" id="statusDesc" rows="4" placeholder="Description"
+                              class="block w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-1 focus:ring-[#0d7a70] focus:border-[#0d7a70] text-sm"></textarea>
+                </div>
+
+                <!-- Badge Color Selection -->
+                <div class="space-y-2">
+                    <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider block">Badge Color</span>
+                    <div class="flex items-center gap-3">
+                        <!-- Color Preview Box -->
+                        <div id="colorPreview" class="w-10 h-8 rounded border border-gray-300 transition-colors" style="background-color: #6b7280;"></div>
+                        <!-- Hex Input -->
+                        <input type="text" name="color_class" id="statusColor" required value="#6b7280" oninput="updateColorPreview(this.value)"
+                               class="w-28 border border-gray-300 rounded-md py-1.5 px-3 focus:outline-none focus:ring-1 focus:ring-[#0d7a70] focus:border-[#0d7a70] text-sm font-mono">
+                        
+                        <!-- Circular Color Choices -->
+                        <div class="flex items-center gap-2">
+                            <button type="button" onclick="selectColor('#10b981')" class="w-5 h-5 rounded-full bg-[#10b981] border border-black/10 focus:outline-none hover:scale-110 transition-transform" title="Green"></button>
+                            <button type="button" onclick="selectColor('#3b82f6')" class="w-5 h-5 rounded-full bg-[#3b82f6] border border-black/10 focus:outline-none hover:scale-110 transition-transform" title="Blue"></button>
+                            <button type="button" onclick="selectColor('#f59e0b')" class="w-5 h-5 rounded-full bg-[#f59e0b] border border-black/10 focus:outline-none hover:scale-110 transition-transform" title="Yellow"></button>
+                            <button type="button" onclick="selectColor('#ef4444')" class="w-5 h-5 rounded-full bg-[#ef4444] border border-black/10 focus:outline-none hover:scale-110 transition-transform" title="Red"></button>
+                            <button type="button" onclick="selectColor('#8b5cf6')" class="w-5 h-5 rounded-full bg-[#8b5cf6] border border-black/10 focus:outline-none hover:scale-110 transition-transform" title="Purple"></button>
+                            <button type="button" onclick="selectColor('#6b7280')" class="w-5 h-5 rounded-full bg-[#6b7280] border border-black/10 focus:outline-none hover:scale-110 transition-transform" title="Gray"></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="px-6 py-4 bg-white border-t border-gray-100 flex justify-end items-center gap-4">
+                <button type="button" onclick="closeModal()" 
+                        class="text-[#0d7a70] hover:text-[#0b665d] font-bold text-sm uppercase focus:outline-none tracking-wider">
+                    CANCEL
+                </button>
+                <button type="submit" 
+                        class="px-5 py-2 bg-[#0d7a70] hover:bg-[#0b665d] text-white rounded-md text-sm font-bold shadow-sm focus:outline-none tracking-wider">
+                    SAVE
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function filterTable() {
+    const input = document.getElementById("searchInput");
+    const filter = input.value.toLowerCase();
+    const table = document.getElementById("statusTable");
+    const tr = table.getElementsByTagName("tr");
+
+    for (let i = 1; i < tr.length; i++) {
+        const nameTd = tr[i].getElementsByClassName("status-name")[0];
+        const descTd = tr[i].getElementsByClassName("status-desc")[0];
+        if (nameTd || descTd) {
+            const nameText = nameTd ? nameTd.textContent || nameTd.innerText : "";
+            const descText = descTd ? descTd.textContent || descTd.innerText : "";
+            if (nameText.toLowerCase().indexOf(filter) > -1 || descText.toLowerCase().indexOf(filter) > -1) {
+                tr[i].style.display = "";
+            } else {
+                tr[i].style.display = "none";
+            }
+        }
+    }
+}
+
+const modal = document.getElementById("statusModal");
+const modalTitle = document.getElementById("modalTitle");
+const modalForm = document.getElementById("modalForm");
+const statusNameInput = document.getElementById("statusName");
+const statusDescInput = document.getElementById("statusDesc");
+const statusColorInput = document.getElementById("statusColor");
+const colorPreview = document.getElementById("colorPreview");
+
+function updateColorPreview(val) {
+    colorPreview.style.backgroundColor = val;
+}
+
+function selectColor(hex) {
+    statusColorInput.value = hex;
+    updateColorPreview(hex);
+}
+
+function applyPreset(name, desc, color) {
+    statusNameInput.value = name;
+    statusDescInput.value = desc;
+    statusColorInput.value = color;
+    updateColorPreview(color);
+}
+
+function openAddModal() {
+    modalTitle.textContent = "Create Status";
+    modalForm.action = "{{ url_for('admin_task_statuses') }}";
+    statusNameInput.value = "";
+    statusDescInput.value = "";
+    selectColor("#6b7280");
+    modal.classList.remove("hidden");
+}
+
+function openEditModal(id, name, desc, color) {
+    modalTitle.textContent = "Edit Status";
+    modalForm.action = "/admin/task_statuses/edit/" + id;
+    statusNameInput.value = name;
+    statusDescInput.value = desc;
+    selectColor(color);
+    modal.classList.remove("hidden");
+}
+
+function closeModal() {
+    modal.classList.add("hidden");
+}
+</script>
+{% endblock %}
