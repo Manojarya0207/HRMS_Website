@@ -10,13 +10,13 @@ from pytz import timezone
 
 from werkzeug.utils import secure_filename
 import sqlite3
-from openpyxl import load_workbook
+from openpyxl import load_workbook 
 from openpyxl.styles import Font, Alignment
 from datetime import datetime
 import calendar
 
 
-app = Flask(__name__, template_folder='templates1')
+app = Flask(__name__, template_folder='templates')
 app.secret_key = 'your-secret-key-change-this-in-production'
 db = Database()
 
