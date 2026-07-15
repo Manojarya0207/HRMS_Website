@@ -103,10 +103,9 @@
                         <select name="status" id="status"
                                 class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm">
                             <option value="">Select Status</option>
-                            <option value="pending"      {% if task[5] == 'pending'      %}selected{% endif %}>Pending</option>
-                            <option value="pending_review" {% if task[5] == 'pending_review' %}selected{% endif %}>Pending Review</option>
-                            <option value="in_progress"  {% if task[5] == 'in_progress'  %}selected{% endif %}>In Progress</option>
-                            <option value="completed"    {% if task[5] == 'completed'    %}selected{% endif %}>Completed</option>
+                            {% for status in task_statuses %}
+                                <option value="{{ status[1] }}" {% if task[5] == status[1] %}selected{% endif %}>{{ status[1] }}</option>
+                            {% endfor %}
                         </select>
                     </div>
 

@@ -240,6 +240,108 @@ class Database:
                 )
             ''')
         
+        # Create tbl_task_status_master
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS tbl_task_status_master (
+                status_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT UNIQUE NOT NULL,
+                description TEXT,
+                color_class TEXT,
+                inserted_date DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+
+        # Create tbl_employee_status_master
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS tbl_employee_status_master (
+                status_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT UNIQUE NOT NULL,
+                description TEXT,
+                color_class TEXT,
+                inserted_date DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+
+        # Seed default task statuses
+        cursor.execute("SELECT COUNT(*) FROM tbl_task_status_master")
+        if cursor.fetchone()[0] == 0:
+            default_task_statuses = [
+                ("Pending", "Task has been created but not started", "#f59e0b"),
+                ("Work In Progress", "Task is currently being worked on", "#3b82f6"),
+                ("Completed", "Task has been successfully completed", "#10b981"),
+                ("Blocked", "Task is blocked by dependency or issue", "#ef4444"),
+                ("On Hold", "Task is temporarily suspended", "#8b5cf6")
+            ]
+            cursor.executemany('''
+                INSERT INTO tbl_task_status_master (name, description, color_class)
+                VALUES (?, ?, ?)
+            ''', default_task_statuses)
+
+        # Seed default employee statuses
+        cursor.execute("SELECT COUNT(*) FROM tbl_employee_status_master")
+        if cursor.fetchone()[0] == 0:
+            default_employee_statuses = [
+                ("active", "Employee is active and working", "#10b981"),
+                ("inactive", "Employee has left or is inactive", "#ef4444"),
+                ("On Leave", "Employee is currently on approved leave", "#f59e0b")
+            ]
+            cursor.executemany('''
+                INSERT INTO tbl_employee_status_master (name, description, color_class)
+                VALUES (?, ?, ?)
+            ''', default_employee_statuses)
+
+        conn.commit()
+        # Create tbl_task_status_master
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS tbl_task_status_master (
+                status_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT UNIQUE NOT NULL,
+                description TEXT,
+                color_class TEXT,
+                inserted_date DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+
+        # Create tbl_employee_status_master
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS tbl_employee_status_master (
+                status_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT UNIQUE NOT NULL,
+                description TEXT,
+                color_class TEXT,
+                inserted_date DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+
+        # Seed default task statuses
+        cursor.execute("SELECT COUNT(*) FROM tbl_task_status_master")
+        if cursor.fetchone()[0] == 0:
+            default_task_statuses = [
+                ("Pending", "Task has been created but not started", "#f59e0b"),
+                ("Work In Progress", "Task is currently being worked on", "#3b82f6"),
+                ("Completed", "Task has been successfully completed", "#10b981"),
+                ("Blocked", "Task is blocked by dependency or issue", "#ef4444"),
+                ("On Hold", "Task is temporarily suspended", "#8b5cf6")
+            ]
+            cursor.executemany('''
+                INSERT INTO tbl_task_status_master (name, description, color_class)
+                VALUES (?, ?, ?)
+            ''', default_task_statuses)
+
+        # Seed default employee statuses
+        cursor.execute("SELECT COUNT(*) FROM tbl_employee_status_master")
+        if cursor.fetchone()[0] == 0:
+            default_employee_statuses = [
+                ("active", "Employee is active and working", "#10b981"),
+                ("inactive", "Employee has left or is inactive", "#ef4444"),
+                ("On Leave", "Employee is currently on approved leave", "#f59e0b")
+            ]
+            cursor.executemany('''
+                INSERT INTO tbl_employee_status_master (name, description, color_class)
+                VALUES (?, ?, ?)
+            ''', default_employee_statuses)
+
+        conn.commit()
         conn.close()
         
     def hash_password(self, password):
@@ -267,11 +369,11 @@ class Database:
         hashed_password = self.hash_password(data['password'])
         cursor.execute('''
             INSERT INTO tbl_employee 
-            (first_name, last_name, gender, dob, address, phone_no, email, password, status, emp_type)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            (first_name, last_name, gender, dob, address, phone_no, email, password, status, emp_type, department)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (data['first_name'], data['last_name'], data['gender'], data['dob'],
               data['address'], data['phone_no'], data['email'], hashed_password,
-              data['status'], data['emp_type']))    
+              data['status'], data['emp_type'], data.get('department')))    
         
         emmpp = cursor.lastrowid
         conn.commit()
@@ -291,11 +393,11 @@ class Database:
         cursor.execute('''
             UPDATE tbl_employee 
             SET first_name = ?, last_name = ?, gender = ?, dob = ?, address = ?, 
-                phone_no = ?, email = ?, password = ?, status = ?, emp_type = ?
+                phone_no = ?, email = ?, password = ?, status = ?, emp_type = ?, department = ?
             WHERE emp_id = ?
         ''', (data['first_name'], data['last_name'], data['gender'], data['dob'],
               data['address'], data['phone_no'], data['email'], hashed_password,
-              data['status'], data['emp_type'], emp_id))
+              data['status'], data['emp_type'], data.get('department'), emp_id))
         
         conn.commit()
         conn.close()
@@ -321,7 +423,7 @@ class Database:
         cursor = conn.cursor()
         
         cursor.execute('''
-            SELECT emp_id, first_name, last_name, gender, dob, address, phone_no, email, status, emp_type
+            SELECT emp_id, first_name, last_name, gender, dob, address, phone_no, email, status, emp_type, department
             FROM tbl_employee
             WHERE emp_id = ?
         ''', (emp_id,))
@@ -335,7 +437,7 @@ class Database:
         cursor = conn.cursor()
         
         query = '''
-            SELECT emp_id, first_name, last_name, gender, dob, address, phone_no, email, status, emp_type, inserted_date, password
+            SELECT emp_id, first_name, last_name, gender, dob, address, phone_no, email, status, emp_type, inserted_date, password, department
             FROM tbl_employee
         '''
         params = []
@@ -350,6 +452,73 @@ class Database:
         employees = cursor.fetchall()
         conn.close()
         return employees
+
+    # Registration request helper methods
+    def add_registration_request(self, data):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            INSERT INTO tbl_registration_requests (
+                first_name, last_name, gender, dob, address, phone_no, email, password, department, status
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
+        ''', (data['first_name'], data['last_name'], data['gender'], data['dob'],
+              data['address'], data['phone_no'], data['email'], data['password'],
+              data['department']))
+        
+        req_id = cursor.lastrowid
+        conn.commit()
+        conn.close()
+        return req_id
+
+    def get_registration_requests(self, status='pending'):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        
+        if status == 'all':
+            cursor.execute('''
+                SELECT request_id, first_name, last_name, phone_no, department, email, status, inserted_date
+                FROM tbl_registration_requests
+                ORDER BY inserted_date DESC
+            ''')
+        else:
+            cursor.execute('''
+                SELECT request_id, first_name, last_name, phone_no, department, email, status, inserted_date
+                FROM tbl_registration_requests
+                WHERE status = ?
+                ORDER BY inserted_date DESC
+            ''', (status,))
+            
+        requests = cursor.fetchall()
+        conn.close()
+        return requests
+
+    def get_registration_request(self, request_id):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT request_id, first_name, last_name, gender, dob, address, phone_no, email, password, department, status, inserted_date
+            FROM tbl_registration_requests
+            WHERE request_id = ?
+        ''', (request_id,))
+        
+        req = cursor.fetchone()
+        conn.close()
+        return req
+
+    def update_registration_status(self, request_id, status):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            UPDATE tbl_registration_requests
+            SET status = ?
+            WHERE request_id = ?
+        ''', (status, request_id))
+        
+        conn.commit()
+        conn.close()
     
     def add_project(self, data):
         conn = self.get_connection()
@@ -754,6 +923,118 @@ class Database:
         conn.commit()
         conn.close()
         
+    # ---------- TASK STATUS MASTER ----------
+    def get_task_statuses(self):
+        with self.get_connection() as c:
+            return c.execute('SELECT status_id, name, description, color_class FROM tbl_task_status_master ORDER BY name').fetchall()
+
+    def add_task_status(self, name, description, color_class):
+        try:
+            with self.get_connection() as c:
+                c.execute('INSERT INTO tbl_task_status_master (name, description, color_class) VALUES (?, ?, ?)',
+                          (name, description, color_class))
+            return True, 'Task status added successfully.'
+        except sqlite3.IntegrityError:
+            return False, 'This task status already exists.'
+
+    def update_task_status(self, status_id, name, description, color_class):
+        try:
+            with self.get_connection() as c:
+                c.execute('UPDATE tbl_task_status_master SET name = ?, description = ?, color_class = ? WHERE status_id = ?',
+                          (name, description, color_class, status_id))
+            return True, 'Task status updated successfully.'
+        except sqlite3.IntegrityError:
+            return False, 'This task status already exists.'
+
+    def delete_task_status(self, status_id):
+        with self.get_connection() as c:
+            c.execute('DELETE FROM tbl_task_status_master WHERE status_id = ?', (status_id,))
+        return True
+
+    # ---------- EMPLOYEE STATUS MASTER ----------
+    def get_employee_statuses(self):
+        with self.get_connection() as c:
+            return c.execute('SELECT status_id, name, description, color_class FROM tbl_employee_status_master ORDER BY name').fetchall()
+
+    def add_employee_status(self, name, description, color_class):
+        try:
+            with self.get_connection() as c:
+                c.execute('INSERT INTO tbl_employee_status_master (name, description, color_class) VALUES (?, ?, ?)',
+                          (name, description, color_class))
+            return True, 'Employee status added successfully.'
+        except sqlite3.IntegrityError:
+            return False, 'This employee status already exists.'
+
+    def update_employee_status(self, status_id, name, description, color_class):
+        try:
+            with self.get_connection() as c:
+                c.execute('UPDATE tbl_employee_status_master SET name = ?, description = ?, color_class = ? WHERE status_id = ?',
+                          (name, description, color_class, status_id))
+            return True, 'Employee status updated successfully.'
+        except sqlite3.IntegrityError:
+            return False, 'This employee status already exists.'
+
+    def delete_employee_status(self, status_id):
+        with self.get_connection() as c:
+            c.execute('DELETE FROM tbl_employee_status_master WHERE status_id = ?', (status_id,))
+        return True
+
+    # ---------- TASK STATUS MASTER ----------
+    def get_task_statuses(self):
+        with self.get_connection() as c:
+            return c.execute('SELECT status_id, name, description, color_class FROM tbl_task_status_master ORDER BY name').fetchall()
+
+    def add_task_status(self, name, description, color_class):
+        try:
+            with self.get_connection() as c:
+                c.execute('INSERT INTO tbl_task_status_master (name, description, color_class) VALUES (?, ?, ?)',
+                          (name, description, color_class))
+            return True, 'Task status added successfully.'
+        except sqlite3.IntegrityError:
+            return False, 'This task status already exists.'
+
+    def update_task_status(self, status_id, name, description, color_class):
+        try:
+            with self.get_connection() as c:
+                c.execute('UPDATE tbl_task_status_master SET name = ?, description = ?, color_class = ? WHERE status_id = ?',
+                          (name, description, color_class, status_id))
+            return True, 'Task status updated successfully.'
+        except sqlite3.IntegrityError:
+            return False, 'This task status already exists.'
+
+    def delete_task_status(self, status_id):
+        with self.get_connection() as c:
+            c.execute('DELETE FROM tbl_task_status_master WHERE status_id = ?', (status_id,))
+        return True
+
+    # ---------- EMPLOYEE STATUS MASTER ----------
+    def get_employee_statuses(self):
+        with self.get_connection() as c:
+            return c.execute('SELECT status_id, name, description, color_class FROM tbl_employee_status_master ORDER BY name').fetchall()
+
+    def add_employee_status(self, name, description, color_class):
+        try:
+            with self.get_connection() as c:
+                c.execute('INSERT INTO tbl_employee_status_master (name, description, color_class) VALUES (?, ?, ?)',
+                          (name, description, color_class))
+            return True, 'Employee status added successfully.'
+        except sqlite3.IntegrityError:
+            return False, 'This employee status already exists.'
+
+    def update_employee_status(self, status_id, name, description, color_class):
+        try:
+            with self.get_connection() as c:
+                c.execute('UPDATE tbl_employee_status_master SET name = ?, description = ?, color_class = ? WHERE status_id = ?',
+                          (name, description, color_class, status_id))
+            return True, 'Employee status updated successfully.'
+        except sqlite3.IntegrityError:
+            return False, 'This employee status already exists.'
+
+    def delete_employee_status(self, status_id):
+        with self.get_connection() as c:
+            c.execute('DELETE FROM tbl_employee_status_master WHERE status_id = ?', (status_id,))
+        return True
+
         # ---------- LEAVE TYPE ----------
     def add_leave_type(self, leave_type):
         try:
@@ -1538,3 +1819,74 @@ class Database:
         data = cursor.fetchall()
         conn.close()
         return data
+
+    def add_daily_task(self, emp_id, title, desc, project_status):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute('''
+            INSERT INTO tbl_daily_task (emp_id, task_title, task_desc, project_status)
+            VALUES (?, ?, ?, ?)
+        ''', (emp_id, title, desc, project_status))
+        conn.commit()
+        conn.close()
+
+    def get_daily_tasks_by_employee(self, emp_id):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute('''
+            SELECT daily_task_id, emp_id, task_title, task_desc, project_status, inserted_date, admin_feedback
+            FROM tbl_daily_task
+            WHERE emp_id = ?
+            ORDER BY inserted_date DESC
+        ''', (emp_id,))
+        data = cursor.fetchall()
+        conn.close()
+        return data
+
+    def get_daily_task(self, daily_task_id):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute('''
+            SELECT daily_task_id, emp_id, task_title, task_desc, project_status, inserted_date, admin_feedback
+            FROM tbl_daily_task
+            WHERE daily_task_id = ?
+        ''', (daily_task_id,))
+        data = cursor.fetchone()
+        conn.close()
+        return data
+
+    def update_daily_task(self, daily_task_id, emp_id, title, desc, project_status):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute('''
+            UPDATE tbl_daily_task
+            SET task_title = ?, task_desc = ?, project_status = ?
+            WHERE daily_task_id = ? AND emp_id = ?
+        ''', (title, desc, project_status, daily_task_id, emp_id))
+        conn.commit()
+        conn.close()
+
+    def get_all_daily_tasks(self):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute('''
+            SELECT dt.daily_task_id, dt.emp_id, dt.task_title, dt.task_desc, dt.project_status, dt.inserted_date, dt.admin_feedback,
+                   e.first_name, e.last_name
+            FROM tbl_daily_task dt
+            JOIN tbl_employee e ON dt.emp_id = e.emp_id
+            ORDER BY dt.inserted_date DESC
+        ''')
+        data = cursor.fetchall()
+        conn.close()
+        return data
+
+    def update_daily_task_feedback(self, daily_task_id, feedback):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute('''
+            UPDATE tbl_daily_task
+            SET admin_feedback = ?
+            WHERE daily_task_id = ?
+        ''', (feedback, daily_task_id))
+        conn.commit()
+        conn.close()

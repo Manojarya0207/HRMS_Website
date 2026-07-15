@@ -26,19 +26,20 @@
 
     <div class="px-4 py-5 sm:p-6">
         <form method="POST" class="space-y-6" id="employeeForm">
+            <input type="hidden" name="req_id" value="{{ req_id or '' }}">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
                 <!-- First Name -->
                 <div>
                     <label for="first_name" class="block text-sm font-medium text-gray-700">First Name</label>
-                    <input type="text" name="first_name" id="first_name"
+                    <input type="text" name="first_name" id="first_name" value="{{ prefill.first_name or '' }}"
                         class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm">
                 </div>
 
                 <!-- Last Name -->
                 <div>
                     <label for="last_name" class="block text-sm font-medium text-gray-700">Last Name</label>
-                    <input type="text" name="last_name" id="last_name"
+                    <input type="text" name="last_name" id="last_name" value="{{ prefill.last_name or '' }}"
                         class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm">
                 </div>
 
@@ -48,16 +49,16 @@
                     <select name="gender" id="gender"
                         class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm">
                         <option value="">Select Gender</option>
-                        <option value="Male">Male</option>
-                        <option value="Female">Female</option>
-                        <option value="Other">Other</option>
+                        <option value="Male" {% if prefill.gender == 'Male' %}selected{% endif %}>Male</option>
+                        <option value="Female" {% if prefill.gender == 'Female' %}selected{% endif %}>Female</option>
+                        <option value="Other" {% if prefill.gender == 'Other' %}selected{% endif %}>Other</option>
                     </select>
                 </div>
 
                 <!-- Date of Birth -->
                 <div>
                     <label for="dob" class="block text-sm font-medium text-gray-700">Date of Birth</label>
-                    <input type="date" name="dob" id="dob"
+                    <input type="date" name="dob" id="dob" value="{{ prefill.dob or '' }}"
                         class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm">
                 </div>
 
@@ -65,27 +66,27 @@
                 <div class="md:col-span-2">
                     <label for="address" class="block text-sm font-medium text-gray-700">Address</label>
                     <textarea name="address" id="address" rows="3"
-                        class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"></textarea>
+                        class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm">{{ prefill.address or '' }}</textarea>
                 </div>
 
                 <!-- Phone Number -->
                 <div>
                     <label for="phone_no" class="block text-sm font-medium text-gray-700">Phone Number</label>
-                    <input type="tel" name="phone_no" id="phone_no"
+                    <input type="tel" name="phone_no" id="phone_no" value="{{ prefill.phone_no or '' }}"
                         class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm">
                 </div>
 
                 <!-- Email -->
                 <div>
-                    <label for="email" class="block text-sm font-medium text-gray-700">Email Address</label>
-                    <input type="email" name="email" id="email" required
+                    <label for="email" class="block text-sm font-medium text-gray-700">Email Address (Login ID)</label>
+                    <input type="text" name="email" id="email" required value="{{ prefill.email or '' }}"
                         class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm">
                 </div>
 
                 <!-- Password -->
                 <div>
-                    <label for="password" class="block text-sm font-medium text-gray-700">Password (ats@123)</label>
-                    <input type="password" name="password" id="password" value="ats@123"
+                    <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+                    <input type="text" name="password" id="password" value="{{ prefill.password or 'ats@123' }}"
                         class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm">
                 </div>
 
@@ -94,8 +95,9 @@
                     <label for="status" class="block text-sm font-medium text-gray-700">Status</label>
                     <select name="status" id="status"
                         class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm">
-                        <option value="active">Active</option>
-                        <option value="inactive">Inactive</option>
+                        {% for status in employee_statuses %}
+                            <option value="{{ status[1] }}" {% if prefill.status == status[1] %}selected{% endif %}>{{ status[1] }}</option>
+                        {% endfor %}
                     </select>
                 </div>
 
@@ -104,8 +106,22 @@
                     <label for="emp_type" class="block text-sm font-medium text-gray-700">Employee Type</label>
                     <select name="emp_type" id="emp_type"
                         class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm">
-                        <option value="emp">Employee</option>
-                        <option value="admin">Admin</option>
+                        <option value="emp" {% if prefill.emp_type == 'emp' %}selected{% endif %}>Employee</option>
+                        <option value="admin" {% if prefill.emp_type == 'admin' %}selected{% endif %}>Admin</option>
+                    </select>
+                </div>
+
+                <!-- Department / vertical -->
+                <div>
+                    <label for="department" class="block text-sm font-medium text-gray-700">Department / vertical</label>
+                    <select name="department" id="department"
+                        class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm">
+                        <option value="">Select Department</option>
+                        <option value="IT" {% if prefill.department == 'IT' %}selected{% endif %}>IT & Software</option>
+                        <option value="HR" {% if prefill.department == 'HR' %}selected{% endif %}>Human Resources</option>
+                        <option value="Sales" {% if prefill.department == 'Sales' %}selected{% endif %}>Sales & Marketing</option>
+                        <option value="Finance" {% if prefill.department == 'Finance' %}selected{% endif %}>Finance & Accounts</option>
+                        <option value="Operations" {% if prefill.department == 'Operations' %}selected{% endif %}>Operations</option>
                     </select>
                 </div>
             </div>

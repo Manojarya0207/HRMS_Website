@@ -20,6 +20,43 @@ app = Flask(__name__, template_folder='templates')
 app.secret_key = 'your-secret-key-change-this-in-production'
 db = Database()
 
+from datetime import timedelta
+
+@app.template_filter('format_ist')
+def format_ist(dt_val):
+    if not dt_val:
+        return ""
+    if isinstance(dt_val, str):
+        try:
+            dt = datetime.strptime(dt_val, "%Y-%m-%d %H:%M:%S")
+        except ValueError:
+            try:
+                dt = datetime.strptime(dt_val, "%Y-%m-%d %H:%M:%S.%f")
+            except ValueError:
+                return dt_val
+    elif isinstance(dt_val, datetime):
+        dt = dt_val
+    else:
+        return str(dt_val)
+    
+    ist_dt = dt + timedelta(hours=5, minutes=30)
+    return ist_dt.strftime("%Y-%m-%d | %I:%M:%S %p")
+
+from flask import get_flashed_messages
+
+@app.context_processor
+def override_flash():
+    already_called = {}
+    original_get_flashed_messages = get_flashed_messages
+    
+    def custom_get_flashed_messages(*args, **kwargs):
+        if already_called.get('called', False):
+            return []
+        already_called['called'] = True
+        return original_get_flashed_messages(*args, **kwargs)
+        
+    return dict(get_flashed_messages=custom_get_flashed_messages)
+
 
 UPLOAD_FOLDER = 'static/bngImg'
 INVOICE_FOLDER = 'static/invoices'
@@ -69,6 +106,34 @@ def todate(value):
     except Exception:
         return s  # give up, return raw
 
+@app.template_filter('is_editable')
+def is_editable(inserted_date_val):
+    if not inserted_date_val:
+        return False
+    if isinstance(inserted_date_val, str):
+        try:
+            dt = datetime.strptime(inserted_date_val, "%Y-%m-%d %H:%M:%S")
+        except ValueError:
+            try:
+                dt = datetime.strptime(inserted_date_val, "%Y-%m-%d %H:%M:%S.%f")
+            except ValueError:
+                return False
+    elif isinstance(inserted_date_val, datetime):
+        dt = inserted_date_val
+    else:
+        return False
+    
+    # Check if task was submitted on the same calendar date (IST) as today
+    task_ist_date = (dt + timedelta(hours=5, minutes=30)).date()
+    current_ist_date = (datetime.utcnow() + timedelta(hours=5, minutes=30)).date()
+    return task_ist_date == current_ist_date
+
+@app.template_filter('time_remaining_for_edit')
+def time_remaining_for_edit(inserted_date_val):
+    if not is_editable(inserted_date_val):
+        return "Expired"
+    return "Editable Today Only"
+
 def get_db_connection():
     conn = sqlite3.connect('project_tracking.db')
     conn.row_factory = sqlite3.Row
@@ -82,6 +147,75 @@ def index():
         else:
             return redirect(url_for('employee_dashboard'))
     return redirect(url_for('login'))
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if 'user_id' in session:
+        if session['emp_type'] == 'admin':
+            return redirect(url_for('admin_dashboard'))
+        else:
+            return redirect(url_for('employee_profile_view'))
+            
+    if request.method == 'POST':
+        first_name = request.form['first_name']
+        last_name = request.form['last_name']
+        gender = request.form['gender']
+        dob = request.form['dob']
+        address = request.form['address']
+        phone_no = request.form['phone_no']
+        email = request.form['email']
+        password = request.form['password']
+        department = request.form['department']
+        
+        try:
+            db.add_registration_request({
+                'first_name': first_name,
+                'last_name': last_name,
+                'gender': gender,
+                'dob': dob,
+                'address': address,
+                'phone_no': phone_no,
+                'email': email,
+                'password': password,
+                'department': department
+            })
+            flash('Registration request submitted successfully! Pending admin approval.', 'success')
+            return redirect(url_for('login'))
+        except Exception as e:
+            flash('Error submitting registration request. Email may already exist.', 'error')
+            
+    return render_template('register.html')
+
+@app.route('/api/check-registration-status', methods=['POST'])
+def api_check_registration_status():
+    email = request.json.get('email', '').strip()
+    if not email:
+        return jsonify({'success': False, 'message': 'Email is required'}), 400
+        
+    conn = db.get_connection()
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT first_name, last_name, status, inserted_date, department
+        FROM tbl_registration_requests
+        WHERE email = ?
+        ORDER BY inserted_date DESC
+        LIMIT 1
+    ''', (email,))
+    row = cursor.fetchone()
+    conn.close()
+    
+    if not row:
+        return jsonify({'success': False, 'message': 'No registration request found for this email address.'})
+    
+    first_name, last_name, status, inserted_date, department = row
+    return jsonify({
+        'success': True,
+        'first_name': first_name,
+        'last_name': last_name,
+        'status': status,
+        'inserted_date': inserted_date,
+        'department': department
+    })
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -143,6 +277,41 @@ def admin_dashboard():
                          status_filter=status_filter,
                          employee_filter=employee_filter)
 
+@app.route('/admin/registration_requests')
+def registration_requests():
+    if 'user_id' not in session or session['emp_type'] != 'admin':
+        return redirect(url_for('login'))
+    
+    status_filter = request.args.get('status', 'pending')
+    reqs = db.get_registration_requests(status=status_filter)
+    return render_template('registration_requests.html', requests=reqs, status_filter=status_filter)
+
+@app.route('/admin/reject_registration/<int:req_id>')
+def reject_registration(req_id):
+    if 'user_id' not in session or session['emp_type'] != 'admin':
+        return redirect(url_for('login'))
+    
+    try:
+        db.update_registration_status(req_id, 'rejected')
+        flash('Registration request rejected successfully.', 'success')
+    except Exception as e:
+        flash(f'Error rejecting request: {e}', 'error')
+        
+    return redirect(url_for('registration_requests'))
+
+@app.route('/admin/reaccept_registration/<int:req_id>')
+def reaccept_registration(req_id):
+    if 'user_id' not in session or session['emp_type'] != 'admin':
+        return redirect(url_for('login'))
+    
+    try:
+        db.update_registration_status(req_id, 'pending')
+        flash('Registration request reaccepted/restored to pending.', 'success')
+    except Exception as e:
+        flash(f'Error reaccepting request: {e}', 'error')
+        
+    return redirect(url_for('registration_requests', status='pending'))
+
 @app.route('/admin/view_employees')
 def view_employees():
     if 'user_id' not in session or session['emp_type'] != 'admin':
@@ -184,7 +353,8 @@ def edit_employee(emp_id):
         except Exception as e:
             flash('Error updating employee. Email might already exist.', 'error')
     
-    return render_template('edit_employee.html', employee=employee)
+    employee_statuses = db.get_employee_statuses()
+    return render_template('edit_employee.html', employee=employee, employee_statuses=employee_statuses)
 
 @app.route('/admin/delete_employee/<int:emp_id>')
 def delete_employee(emp_id):
@@ -204,6 +374,25 @@ def add_employee():
     if 'user_id' not in session or session['emp_type'] != 'admin':
         return redirect(url_for('login'))
     
+    req_id = request.args.get('req_id') or request.form.get('req_id')
+    prefill = {}
+    
+    if req_id:
+        req_data = db.get_registration_request(req_id)
+        if req_data:
+            # req_data: request_id, first_name, last_name, gender, dob, address, phone_no, email, password, department, status, inserted_date
+            prefill = {
+                'first_name': req_data[1],
+                'last_name': req_data[2],
+                'gender': req_data[3],
+                'dob': req_data[4],
+                'address': req_data[5],
+                'phone_no': req_data[6],
+                'email': req_data[7],
+                'password': req_data[8],
+                'department': req_data[9]
+            }
+    
     if request.method == 'POST':
         employee_data = {
             'first_name': request.form['first_name'],
@@ -215,17 +404,22 @@ def add_employee():
             'email': request.form['email'],
             'password': request.form['password'],
             'status': request.form['status'],
-            'emp_type': request.form['emp_type']
+            'emp_type': request.form['emp_type'],
+            'department': request.form.get('department')
         }
         
         try:
             emp_id = db.add_employee(employee_data)
+            if req_id:
+                db.update_registration_status(req_id, 'approved')
             flash('Employee added successfully!', 'success')
             return redirect(url_for('manage_profile', emp_id=emp_id))
         except Exception as e:
             flash('Error adding employee. Email might already exist.', 'error')
-    
-    return render_template('add_employee.html')
+            prefill = employee_data
+            
+    employee_statuses = db.get_employee_statuses()
+    return render_template('add_employee.html', prefill=prefill, req_id=req_id, employee_statuses=employee_statuses)
 
 @app.route('/admin/view_projects')
 def view_projects():
@@ -376,7 +570,8 @@ def edit_task(task_id):
     
     projects = db.get_projects()
     employees = db.get_employees()
-    return render_template('edit_task.html', task=task, projects=projects, employees=employees)
+    task_statuses = db.get_task_statuses()
+    return render_template('edit_task.html', task=task, projects=projects, employees=employees, task_statuses=task_statuses)
 
 @app.route('/admin/delete_task/<int:task_id>')
 def delete_task(task_id):
@@ -417,7 +612,8 @@ def add_task():
     projects = db.get_projects()
     employees = db.get_employees()
     today = date.today().isoformat()  # format: 'YYYY-MM-DD'
-    return render_template('add_task.html', projects=projects, employees=employees, today=today)
+    task_statuses = db.get_task_statuses()
+    return render_template('add_task.html', projects=projects, employees=employees, today=today, task_statuses=task_statuses)
 
 @app.route('/employee/dashboard')
 def employee_dashboard():
@@ -584,6 +780,93 @@ def edit_task_detail(detail_id):
             flash('Error editing task update.', 'error')
     
     return render_template('edit_task_detail.html', detail=detail, task_id=detail[1])
+
+@app.route('/employee/daily_tasks', methods=['GET', 'POST'])
+def employee_daily_tasks():
+    if 'user_id' not in session or session['emp_type'] != 'emp':
+        return redirect(url_for('login'))
+        
+    profile = db.get_employee_profile(session['user_id'])
+    emg_missing = (
+        not profile
+        or not profile.get('EmgContact')
+        or profile.get('EmgUpdatedByEmp') == 0
+    )
+    if emg_missing:
+        flash("Please update your emergency contact before accessing this page.", "error")
+        return redirect(url_for('employee_dashboard'))
+    
+    statuses = db.get_task_statuses()
+    
+    if request.method == 'POST':
+        if not statuses:
+            flash("Cannot submit task. Wait for admin status update.", "error")
+            return redirect(url_for('employee_daily_tasks'))
+        title = request.form.get('task_title', '').strip()
+        desc = request.form.get('task_desc', '').strip()
+        project_status = request.form.get('project_status', '').strip()
+        
+        if not title or not desc or not project_status:
+            flash("All fields are required.", "error")
+        else:
+            db.add_daily_task(session['user_id'], title, desc, project_status)
+            flash("Daily task submitted successfully!", "success")
+            return redirect(url_for('employee_daily_tasks'))
+            
+    daily_tasks = db.get_daily_tasks_by_employee(session['user_id'])
+    return render_template('employee_daily_tasks.html', daily_tasks=daily_tasks, statuses=statuses)
+
+@app.route('/employee/daily_task/edit/<int:task_id>', methods=['GET', 'POST'])
+def edit_daily_task(task_id):
+    if 'user_id' not in session or session['emp_type'] != 'emp':
+        return redirect(url_for('login'))
+        
+    task = db.get_daily_task(task_id)
+    if not task or task[1] != session['user_id']:
+        flash("Daily task not found or unauthorized.", "error")
+        return redirect(url_for('employee_daily_tasks'))
+        
+    # Check 24 hour limit using the template filter function logic
+    if not is_editable(task[5]):
+        flash("The editing window for this daily task has expired (24 hours limit reached).", "error")
+        return redirect(url_for('employee_daily_tasks'))
+        
+    statuses = db.get_task_statuses()
+        
+    if request.method == 'POST':
+        if not statuses:
+            flash("Cannot update task. Wait for admin status update.", "error")
+            return redirect(url_for('employee_daily_tasks'))
+        title = request.form.get('task_title', '').strip()
+        desc = request.form.get('task_desc', '').strip()
+        project_status = request.form.get('project_status', '').strip()
+        
+        if not title or not desc or not project_status:
+            flash("All fields are required.", "error")
+        else:
+            db.update_daily_task(task_id, session['user_id'], title, desc, project_status)
+            flash("Daily task updated successfully!", "success")
+            return redirect(url_for('employee_daily_tasks'))
+            
+    return render_template('edit_daily_task.html', task=task, statuses=statuses)
+
+@app.route('/admin/daily_tasks')
+def admin_daily_tasks():
+    if 'user_id' not in session or session['emp_type'] != 'admin':
+        return redirect(url_for('login'))
+        
+    daily_tasks = db.get_all_daily_tasks()
+    return render_template('admin_daily_tasks.html', daily_tasks=daily_tasks)
+
+@app.route('/admin/daily_task/feedback/<int:task_id>', methods=['POST'])
+def admin_daily_task_feedback(task_id):
+    if 'user_id' not in session or session['emp_type'] != 'admin':
+        return redirect(url_for('login'))
+        
+    feedback = request.form.get('admin_feedback', '').strip()
+    db.update_daily_task_feedback(task_id, feedback)
+    flash("Feedback updated successfully!", "success")
+    return redirect(url_for('admin_daily_tasks'))
 
 @app.route('/api/task_details/<int:task_id>')
 def get_task_details(task_id):
@@ -1794,6 +2077,100 @@ def get_sub_expense_types_api(expense_type_id):
     sub_types = db.get_sub_expense_types(expense_type_id)
     result = [{'id': st[0], 'name': st[1]} for st in sub_types]
     return jsonify(result)
+
+
+# ------ Task Status Master --------------------
+@app.route('/admin/task_statuses', methods=['GET', 'POST'])
+def admin_task_statuses():
+    if 'user_id' not in session or session['emp_type'] != 'admin':
+        return redirect(url_for('login'))
+    
+    if request.method == 'POST':
+        name = request.form['name'].strip()
+        description = request.form['description'].strip()
+        color_class = request.form['color_class'].strip()
+        
+        if not name:
+            flash('Status Name cannot be empty.', 'error')
+        else:
+            success, msg = db.add_task_status(name, description, color_class)
+            flash(msg, 'success' if success else 'error')
+        return redirect(url_for('admin_task_statuses'))
+        
+    statuses = db.get_task_statuses()
+    return render_template('admin_task_statuses.html', statuses=statuses)
+
+@app.route('/admin/task_statuses/edit/<int:status_id>', methods=['POST'])
+def edit_task_status(status_id):
+    if 'user_id' not in session or session['emp_type'] != 'admin':
+        return redirect(url_for('login'))
+    
+    name = request.form['name'].strip()
+    description = request.form['description'].strip()
+    color_class = request.form['color_class'].strip()
+    
+    if not name:
+        flash('Status Name cannot be empty.', 'error')
+    else:
+        success, msg = db.update_task_status(status_id, name, description, color_class)
+        flash(msg, 'success' if success else 'error')
+    return redirect(url_for('admin_task_statuses'))
+
+@app.route('/admin/task_statuses/delete/<int:status_id>')
+def delete_task_status(status_id):
+    if 'user_id' not in session or session['emp_type'] != 'admin':
+        return redirect(url_for('login'))
+    
+    db.delete_task_status(status_id)
+    flash('Task status deleted successfully.', 'success')
+    return redirect(url_for('admin_task_statuses'))
+
+
+# ------ Employee Status Master ----------------
+@app.route('/admin/employee_statuses', methods=['GET', 'POST'])
+def admin_employee_statuses():
+    if 'user_id' not in session or session['emp_type'] != 'admin':
+        return redirect(url_for('login'))
+    
+    if request.method == 'POST':
+        name = request.form['name'].strip()
+        description = request.form['description'].strip()
+        color_class = request.form['color_class'].strip()
+        
+        if not name:
+            flash('Status Name cannot be empty.', 'error')
+        else:
+            success, msg = db.add_employee_status(name, description, color_class)
+            flash(msg, 'success' if success else 'error')
+        return redirect(url_for('admin_employee_statuses'))
+        
+    statuses = db.get_employee_statuses()
+    return render_template('admin_employee_statuses.html', statuses=statuses)
+
+@app.route('/admin/employee_statuses/edit/<int:status_id>', methods=['POST'])
+def edit_employee_status(status_id):
+    if 'user_id' not in session or session['emp_type'] != 'admin':
+        return redirect(url_for('login'))
+    
+    name = request.form['name'].strip()
+    description = request.form['description'].strip()
+    color_class = request.form['color_class'].strip()
+    
+    if not name:
+        flash('Status Name cannot be empty.', 'error')
+    else:
+        success, msg = db.update_employee_status(status_id, name, description, color_class)
+        flash(msg, 'success' if success else 'error')
+    return redirect(url_for('admin_employee_statuses'))
+
+@app.route('/admin/employee_statuses/delete/<int:status_id>')
+def delete_employee_status(status_id):
+    if 'user_id' not in session or session['emp_type'] != 'admin':
+        return redirect(url_for('login'))
+    
+    db.delete_employee_status(status_id)
+    flash('Employee status deleted successfully.', 'success')
+    return redirect(url_for('admin_employee_statuses'))
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5050)
