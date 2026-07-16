@@ -2173,4 +2173,4 @@ def delete_employee_status(status_id):
     return redirect(url_for('admin_employee_statuses'))
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5050)
+    app.run(debug=True, host='0.0.0.0', port=50001)

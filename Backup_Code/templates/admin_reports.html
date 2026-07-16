@@ -1,0 +1,296 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Reports - ATS HRMS{% endblock %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="mb-8 flex justify-between items-center">
+        <div>
+            <h1 class="text-2xl sm:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600"><i class="fas fa-chart-pie mr-2 text-purple-600"></i>Reports & Analytics</h1>
+            <p class="mt-2 text-gray-500 text-sm">Visual overview of project metrics and task distributions.</p>
+        </div>
+        <div>
+            <a href="{{ url_for('tasks.admin_dashboard') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                <i class="fas fa-arrow-left mr-2"></i> Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-white p-4 rounded-lg shadow border border-gray-100 mb-8">
+        <form method="GET" action="{{ url_for('tasks.admin_reports') }}" class="flex flex-col md:flex-row gap-4 items-end">
+            <div class="flex-1 w-full relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i class="fas fa-search text-gray-400"></i>
+                </div>
+                <input type="text" name="search_query" value="{{ search_query }}" placeholder="Search tasks, descriptions..." class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+            </div>
+            
+            <div class="w-full md:w-48">
+                <select name="project_filter" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                    <option value="">All Projects</option>
+                    {% for p in projects %}
+                        <option value="{{ p[1] }}" {% if project_filter == p[1] %}selected{% endif %}>{{ p[1] }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="w-full md:w-48">
+                <select name="employee_filter" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                    <option value="">All Employees</option>
+                    {% for e in employees %}
+                        {% if e[9] == 'emp' %}
+                        <option value="{{ e[1] }} {{ e[2] }}" {% if employee_filter == e[1] + ' ' + e[2] %}selected{% endif %}>{{ e[1] }} {{ e[2] }}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="w-full md:w-48">
+                <select name="status_filter" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                    <option value="">All Statuses</option>
+                    <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+                    <option value="todo" {% if status_filter == 'todo' %}selected{% endif %}>To Do</option>
+                    <option value="in_progress" {% if status_filter == 'in_progress' %}selected{% endif %}>In Progress</option>
+                    <option value="review" {% if status_filter == 'review' %}selected{% endif %}>Review</option>
+                    <option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>Completed</option>
+                </select>
+            </div>
+
+            <div>
+                <button type="submit" class="w-full inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    Apply
+                </button>
+            </div>
+            {% if search_query or project_filter or employee_filter or status_filter %}
+            <div>
+                <a href="{{ url_for('tasks.admin_reports') }}" class="w-full inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    Clear
+                </a>
+            </div>
+            {% endif %}
+        </form>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <!-- Task Status Chart -->
+        <div class="bg-white p-6 rounded-lg shadow border border-gray-100">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Task Distribution by Status</h3>
+            <div class="relative h-64 w-full flex justify-center">
+                <canvas id="statusChart"></canvas>
+            </div>
+            {% if not status_counts %}
+            <p class="text-center text-gray-500 text-sm mt-4">No task data available.</p>
+            {% endif %}
+        </div>
+
+        <!-- Project Progression -->
+        <div class="bg-white p-6 rounded-lg shadow border border-gray-100">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Total Tasks per Project</h3>
+            <div class="relative h-64 w-full flex justify-center">
+                <canvas id="projectChart"></canvas>
+            </div>
+            {% if not project_counts %}
+            <p class="text-center text-gray-500 text-sm mt-4">No project data available.</p>
+            {% endif %}
+        </div>
+
+        <!-- Employee Workload -->
+        <div class="bg-white p-6 rounded-lg shadow border border-gray-100 md:col-span-2">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Employee Workload (Assigned Tasks)</h3>
+            <div class="relative h-80 w-full flex justify-center">
+                <canvas id="employeeChart"></canvas>
+            </div>
+            {% if not employee_counts %}
+            <p class="text-center text-gray-500 text-sm mt-4">No employee data available.</p>
+            {% endif %}
+        </div>
+    </div>
+    <!-- More Details Sections -->
+    <div class="grid grid-cols-1 lg:grid-cols-[350px_1fr] gap-8 mt-8 pb-12">
+        <!-- Recent Activity Feed -->
+        <div class="bg-white p-6 rounded-lg shadow border border-gray-100 max-h-[600px] overflow-y-auto">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4 sticky top-0 bg-white pb-2 border-b border-gray-100 z-10"><i class="fas fa-history mr-2 text-blue-500"></i>Recent Activity</h3>
+            <div class="flow-root">
+                <ul class="-mb-8">
+                    {% for act in recent_activities %}
+                    <li>
+                        <div class=" relative pb-8">
+                            {% if not loop.last %}
+                            <span class="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200" aria-hidden="true"></span>
+                            {% endif %}
+                            <div class="relative flex space-x-3">
+                                <div>
+                                    <span class="h-8 w-8 rounded-full flex items-center justify-center ring-8 ring-white
+                                        {% if act[4] == 'complete' or act[4] == 'completed' %}bg-green-500{% elif act[4] == 'in_progress' %}bg-yellow-500{% else %}bg-gray-400{% endif %}">
+                                        <i class="fas {% if act[4] == 'complete' or act[4] == 'completed' %}fa-check{% elif act[4] == 'in_progress' %}fa-cog{% else %}fa-comment{% endif %} text-white text-xs"></i>
+                                    </span>
+                                </div>
+                                <div class="min-w-0 flex-1 pt-1.5 flex justify-between space-x-4">
+                                    <div>
+                                        <p class="text-sm text-gray-500">{{ act[7] }} added an update to <a href="{{ url_for('tasks.show_task_details', task_id=act[1]) }}" class="font-medium text-gray-900 hover:text-indigo-600">{{ act[5][:30]|safe }}...</a></p>
+                                        <div class="mt-2 text-sm text-gray-700 bg-gray-50 rounded-md p-3 border border-gray-100">
+                                            {{ act[2]|safe }}
+                                        </div>
+                                    </div>
+                                    <div class="text-right text-xs whitespace-nowrap text-gray-500">
+                                        <time datetime="{{ act[3] }}">{{ act[3][:10] if act[3] else 'N/A' }}</time>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+                    {% else %}
+                    <p class="text-gray-500 text-sm italic">No recent activity matching your filters.</p>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <!-- Detailed Task List -->
+        <div class="bg-white rounded-lg shadow border border-gray-100 overflow-hidden">
+            <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                <h3 class="text-lg font-semibold text-gray-800"><i class="fas fa-list mr-2 text-indigo-500"></i>Detailed Task List</h3>
+                <span class="text-sm text-gray-500 font-medium">{{ total_tasks }} task(s) found</span>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Task</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assignee</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project</th>
+                            <th scope="col" class="relative px-6 py-3"><span class="sr-only">View</span></th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for task in tasks %}
+                        <tr>
+                            <td class="px-6 py-4">
+                                <div class="text-sm font-medium text-gray-900">{{ task[1][:50]|safe }}{% if task[1]|length > 50 %}...{% endif %}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                {% if task[3] == 'completed' %}bg-green-100 text-green-800
+                                {% elif task[3] == 'in_progress' %}bg-yellow-100 text-yellow-800
+                                {% elif task[3] == 'review' %}bg-blue-100 text-blue-800
+                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                    {{ task[3]|replace('_', ' ')|title }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ task[7] }} {{ task[8] }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ task[6] }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <a href="{{ url_for('tasks.show_task_details', task_id=task[0]) }}" class="text-indigo-600 hover:text-indigo-900">View</a>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="px-6 py-4 text-center text-sm text-gray-500">No tasks found matching your filters.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% if total_pages > 1 %}
+            <div class="bg-gray-50 px-4 py-3 border-t border-gray-200 sm:px-6 flex justify-between items-center">
+                <div class="flex-1 flex justify-between sm:hidden">
+                    <a href="?page={{ page - 1 }}&project_filter={{ project_filter }}&status_filter={{ status_filter }}&employee_filter={{ employee_filter }}&search_query={{ search_query }}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 {% if page == 1 %}pointer-events-none opacity-50{% endif %}">Previous</a>
+                    <a href="?page={{ page + 1 }}&project_filter={{ project_filter }}&status_filter={{ status_filter }}&employee_filter={{ employee_filter }}&search_query={{ search_query }}" class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 {% if page == total_pages %}pointer-events-none opacity-50{% endif %}">Next</a>
+                </div>
+                <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                    <div><p class="text-sm text-gray-700">Showing page <span class="font-medium">{{ page }}</span> of <span class="font-medium">{{ total_pages }}</span></p></div>
+                    <div>
+                        <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                            <a href="?page={{ page - 1 }}&project_filter={{ project_filter }}&status_filter={{ status_filter }}&employee_filter={{ employee_filter }}&search_query={{ search_query }}" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 {% if page == 1 %}pointer-events-none opacity-50{% endif %}">
+                                <span class="sr-only">Previous</span>
+                                <i class="fas fa-chevron-left"></i>
+                            </a>
+                            <a href="?page={{ page + 1 }}&project_filter={{ project_filter }}&status_filter={{ status_filter }}&employee_filter={{ employee_filter }}&search_query={{ search_query }}" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 {% if page == total_pages %}pointer-events-none opacity-50{% endif %}">
+                                <span class="sr-only">Next</span>
+                                <i class="fas fa-chevron-right"></i>
+                            </a>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const statusData = {{ status_counts|tojson|safe }};
+        if(statusData && statusData.length > 0) {
+            const statusLabels = statusData.map(item => item[0].replace('_', ' ').toUpperCase());
+            const statusValues = statusData.map(item => item[1]);
+            
+            new Chart(document.getElementById('statusChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: statusLabels,
+                    datasets: [{
+                        data: statusValues,
+                        backgroundColor: ['#94a3b8', '#3b82f6', '#facc15', '#22c55e'],
+                        borderWidth: 1
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
+
+        const projectData = {{ project_counts|tojson|safe }};
+        if(projectData && projectData.length > 0) {
+            const projectLabels = projectData.map(item => item[0]);
+            const projectValues = projectData.map(item => item[1]);
+
+            new Chart(document.getElementById('projectChart'), {
+                type: 'bar',
+                data: {
+                    labels: projectLabels,
+                    datasets: [{
+                        label: 'Tasks',
+                        data: projectValues,
+                        backgroundColor: '#6366f1',
+                        borderRadius: 4
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
+
+        const employeeData = {{ employee_counts|tojson|safe }};
+        if(employeeData && employeeData.length > 0) {
+            const employeeLabels = employeeData.map(item => item[0]);
+            const employeeValues = employeeData.map(item => item[1]);
+
+            new Chart(document.getElementById('employeeChart'), {
+                type: 'bar',
+                data: {
+                    labels: employeeLabels,
+                    datasets: [{
+                        label: 'Assigned Tasks',
+                        data: employeeValues,
+                        backgroundColor: '#10b981',
+                        borderRadius: 4
+                    }]
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { ticks: { autoSkip: false, maxRotation: 45, minRotation: 45 } },
+                        y: { beginAtZero: true, ticks: { stepSize: 1 } }
+                    }
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}
