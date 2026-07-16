@@ -199,3 +199,11 @@ def handle_leave_action():
     db.update_leave_status(req_id, action, session['user_id'], comments)
     flash(f'Leave request {action}', 'success')
     return redirect(url_for('leave.admin_leave_requests'))
+
+
+@leave_bp.route('/holidays')
+def holidays():
+    if 'user_id' not in session:
+        return redirect(url_for('auth.login'))
+    return render_template('leave/holidays.html')
+

@@ -488,3 +488,11 @@ def get_sub_expense_types_api(expense_type_id):
     sub_types = db.get_sub_expense_types(expense_type_id)
     result = [{'id': st[0], 'name': st[1]} for st in sub_types]
     return jsonify(result)
+
+
+@expenses_bp.route('/travel_policy')
+def travel_policy():
+    if 'user_id' not in session:
+        return redirect(url_for('auth.login'))
+    return render_template('expenses/travel_policy.html')
+

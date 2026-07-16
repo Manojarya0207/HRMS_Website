@@ -1,0 +1,120 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Holidays 2026 - Project Tracking System{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="mb-8 mt-4 text-center">
+        <h1 class="text-4xl font-extrabold text-gray-900 tracking-tight">Holiday List <span class="text-blue-600">2026</span></h1>
+        <p class="mt-4 text-lg text-gray-500 max-w-2xl mx-auto">Plan your year ahead with the official list of public and restricted holidays.</p>
+    </div>
+
+    <!-- Public Holidays Section -->
+    <div class="mb-12">
+        <div class="flex items-center mb-6">
+            <div class="bg-blue-100 p-3 rounded-full mr-4">
+                <i class="fas fa-calendar-check text-blue-600 text-xl"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-gray-800">Public Holidays 2026</h2>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {% set public_holidays = [
+                {'date': '15.01.2026', 'day': 'Thursday', 'name': 'Makara Sankranti', 'icon': 'fas fa-sun', 'color': 'text-orange-500', 'bg': 'bg-orange-50'},
+                {'date': '26.01.2026', 'day': 'Monday', 'name': 'Republic Day', 'icon': 'fas fa-flag', 'color': 'text-green-600', 'bg': 'bg-green-50'},
+                {'date': '19.03.2026', 'day': 'Thursday', 'name': 'Ugadi Festival', 'icon': 'fas fa-leaf', 'color': 'text-green-500', 'bg': 'bg-green-50'},
+                {'date': '21.03.2026', 'day': 'Saturday', 'name': 'Khutub-E-Ramzan', 'icon': 'fas fa-moon', 'color': 'text-indigo-500', 'bg': 'bg-indigo-50'},
+                {'date': '01.05.2026', 'day': 'Friday', 'name': 'May Day', 'icon': 'fas fa-tools', 'color': 'text-gray-600', 'bg': 'bg-gray-100'},
+                {'date': '28.05.2026', 'day': 'Thursday', 'name': 'Bakrid', 'icon': 'fas fa-star-and-crescent', 'color': 'text-emerald-500', 'bg': 'bg-emerald-50'},
+                {'date': '15.08.2026', 'day': 'Saturday', 'name': 'Independence Day', 'icon': 'fas fa-flag-checkered', 'color': 'text-blue-600', 'bg': 'bg-blue-50'},
+                {'date': '26.08.2026', 'day': 'Wednesday', 'name': 'Eid-Milad', 'icon': 'fas fa-mosque', 'color': 'text-teal-500', 'bg': 'bg-teal-50'},
+                {'date': '02.10.2026', 'day': 'Friday', 'name': 'Gandhi Jayanthi', 'icon': 'fas fa-glasses', 'color': 'text-gray-700', 'bg': 'bg-gray-100'},
+                {'date': '20.10.2026', 'day': 'Tuesday', 'name': 'Mahannavami, Ayudha Pooja', 'icon': 'fas fa-om', 'color': 'text-orange-600', 'bg': 'bg-orange-50'},
+                {'date': '10.11.2026', 'day': 'Tuesday', 'name': 'Balipadyami, Deepavali', 'icon': 'fas fa-fire', 'color': 'text-yellow-500', 'bg': 'bg-yellow-50'},
+                {'date': '25.12.2026', 'day': 'Friday', 'name': 'Christmas', 'icon': 'fas fa-tree', 'color': 'text-red-500', 'bg': 'bg-red-50'}
+            ] %}
+            
+            {% for holiday in public_holidays %}
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-300 overflow-hidden relative group">
+                <div class="absolute top-0 left-0 w-1 h-full {{ holiday.bg.replace('bg-', 'bg-').replace('50', '500').replace('100', '500') }}"></div>
+                <div class="p-5 flex items-start space-x-4">
+                    <div class="{{ holiday.bg }} p-3 rounded-lg flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
+                        <i class="{{ holiday.icon }} {{ holiday.color }} text-xl w-6 text-center"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-900 mb-1 leading-tight">{{ holiday.name }}</h3>
+                        <div class="flex items-center text-sm text-gray-500 mb-1">
+                            <i class="far fa-calendar-alt mr-2 w-4"></i>
+                            <span>{{ holiday.date }}</span>
+                        </div>
+                        <div class="flex items-center text-sm text-gray-500">
+                            <i class="far fa-clock mr-2 w-4"></i>
+                            <span>{{ holiday.day }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Restricted Holidays Section -->
+    <div class="mb-12">
+        <div class="flex items-center mb-6">
+            <div class="bg-purple-100 p-3 rounded-full mr-4">
+                <i class="fas fa-calendar-minus text-purple-600 text-xl"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-gray-800">Restricted Holidays 2026</h2>
+        </div>
+        
+        <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-8 rounded-r-lg">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-info-circle text-blue-500"></i>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm text-blue-700 font-medium">
+                        Employees may avail any two restricted holidays from the notified list subject to prior approval from their reporting manager. Requests should be submitted in advance through HRMS or prescribed leave application procedure.
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {% set restricted_holidays = [
+                {'date': '04.02.2026', 'day': 'Wednesday', 'name': 'Shah-e-Barath', 'icon': 'fas fa-star-and-crescent'},
+                {'date': '02.03.2026', 'day': 'Monday', 'name': 'Holi Festival', 'icon': 'fas fa-palette'},
+                {'date': '17.03.2026', 'day': 'Tuesday', 'name': 'Shab-e-Qadar', 'icon': 'fas fa-moon'},
+                {'date': '27.03.2026', 'day': 'Friday', 'name': 'Sri Ramanavami', 'icon': 'fas fa-om'},
+                {'date': '31.03.2026', 'day': 'Tuesday', 'name': 'Mahaveera Jayanthi', 'icon': 'fas fa-praying-hands'},
+                {'date': '03.04.2026', 'day': 'Friday', 'name': 'Good Friday', 'icon': 'fas fa-cross'},
+                {'date': '14.04.2026', 'day': 'Tuesday', 'name': 'Dr. B.R. Ambedkar Jayanthi', 'icon': 'fas fa-book'},
+                {'date': '20.04.2026', 'day': 'Monday', 'name': 'Basava Jayanthi', 'icon': 'fas fa-dharmachakra'},
+                {'date': '26.06.2026', 'day': 'Friday', 'name': 'Last Day of Moharam', 'icon': 'fas fa-mosque'},
+                {'date': '28.08.2026', 'day': 'Friday', 'name': 'Raksha Bandhan', 'icon': 'fas fa-ribbon'},
+                {'date': '21.10.2026', 'day': 'Wednesday', 'name': 'Vijayadasami', 'icon': 'fas fa-leaf'},
+                {'date': '27.11.2026', 'day': 'Friday', 'name': 'Kanakadasa Jayanthi', 'icon': 'fas fa-user'},
+                {'date': '24.11.2026', 'day': 'Tuesday', 'name': 'Guru Nanak Jayanthi', 'icon': 'fas fa-hands'},
+                {'date': 'TBD', 'day': 'TBD', 'name': 'Local Jatra Mahotsava', 'icon': 'fas fa-map-marker-alt'}
+            ] %}
+            
+            {% for holiday in restricted_holidays %}
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 hover:border-purple-300 hover:shadow-md transition-all duration-300 p-4 flex items-center group">
+                <div class="bg-purple-50 text-purple-600 p-3 rounded-full mr-4 group-hover:bg-purple-600 group-hover:text-white transition-colors duration-300">
+                    <i class="{{ holiday.icon }} text-lg w-5 text-center"></i>
+                </div>
+                <div>
+                    <h3 class="text-md font-bold text-gray-900">{{ holiday.name }}</h3>
+                    <p class="text-xs text-gray-500 mt-1">
+                        <i class="far fa-calendar-alt mr-1"></i> {{ holiday.date }} 
+                        {% if holiday.day != 'TBD' %}
+                        <span class="mx-1">•</span> <i class="far fa-clock mr-1"></i> {{ holiday.day }}
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

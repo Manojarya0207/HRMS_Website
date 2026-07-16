@@ -425,3 +425,60 @@ def delete_employee_status(status_id):
     db.delete_employee_status(status_id)
     flash('Employee status deleted successfully.', 'success')
     return redirect(url_for('tasks.admin_employee_statuses'))
+
+
+# ── Reports & Kanban ──────────────────────────────────────────────────────────
+
+@tasks_bp.route('/employee/reports')
+def employee_reports():
+    if 'user_id' not in session or session['emp_type'] != 'emp':
+        return redirect(url_for('auth.login'))
+        
+    project_filter = request.args.get('project_filter', '')
+    status_filter = request.args.get('status_filter', '')
+    search_query = request.args.get('search_query', '')
+        
+    status_counts = db.get_employee_task_status_counts(session['user_id'], project_filter, search_query)
+    recent_activities = db.get_recent_task_activities(limit=20, emp_id=session['user_id'], project_filter=project_filter, status_filter=status_filter, search_query=search_query)
+    tasks = db.get_tasks_by_employee(session['user_id'], status_filter=status_filter, project_filter=project_filter, search_query=search_query)
+    
+    projects = db.get_projects()
+    
+    return render_template('tasks/employee_reports.html',
+                           status_counts=status_counts,
+                           recent_activities=recent_activities,
+                           tasks=tasks,
+                           projects=projects,
+                           project_filter=project_filter,
+                           status_filter=status_filter,
+                           search_query=search_query)
+
+@tasks_bp.route('/employee/kanban')
+def employee_kanban():
+    if 'user_id' not in session or session['emp_type'] != 'emp':
+        return redirect(url_for('auth.login'))
+        
+    tasks = db.get_tasks_by_employee(session['user_id'])
+    return render_template('tasks/kanban_board.html', tasks=tasks, is_admin=False)
+
+
+# ── API ───────────────────────────────────────────────────────────────────────
+
+@tasks_bp.route('/api/update_task_status', methods=['POST'])
+def update_task_status():
+    if 'user_id' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    data = request.json
+    task_id = data.get('task_id')
+    new_status = data.get('status')
+    
+    if not task_id or not new_status:
+        return jsonify({'error': 'Bad request'}), 400
+        
+    try:
+        db.update_task_status_only(task_id, new_status)
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+

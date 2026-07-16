@@ -1,0 +1,30 @@
+<div class="kanban-card group border border-gray-200" data-task-id="{{ task[0] }}">
+    <div class="flex justify-between items-start mb-2">
+        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium 
+            {% if task[priority_idx] == 'high' %}bg-red-100 text-red-800
+            {% elif task[priority_idx] == 'medium' %}bg-yellow-100 text-yellow-800
+            {% else %}bg-green-100 text-green-800{% endif %}">
+            {{ task[priority_idx]|title }}
+        </span>
+        {% if is_admin %}
+            <span class="text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full font-medium" title="Assignee">{{ task[name_idx_start] }} {{ task[name_idx_start+1] }}</span>
+        {% else %}
+            <span class="text-xs bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full font-medium truncate max-w-[100px]" title="Project">{{ task[proj_name_idx] }}</span>
+        {% endif %}
+    </div>
+    <h4 class="text-sm font-semibold text-gray-900 mb-1 leading-tight">{{ task[1][:60]|safe }}{% if task[1]|length > 60 %}...{% endif %}</h4>
+    <div class="flex justify-between items-center mt-3 pt-3 border-t border-gray-100">
+        <div class="text-xs text-gray-500">
+            <i class="far fa-clock mr-1"></i>
+            {% if is_admin %}
+                {{ task[6] }}
+            {% else %}
+                {{ task[4] }}
+            {% endif %}
+        </div>
+        <a href="{{ url_for('tasks.show_task_details' if is_admin else 'tasks.view_task_details', task_id=task[0]) }}" 
+           class="text-xs font-semibold text-blue-600 hover:text-blue-800 opacity-0 group-hover:opacity-100 transition-opacity">
+           <i class="fas fa-external-link-alt mr-1"></i>View
+        </a>
+    </div>
+</div>
