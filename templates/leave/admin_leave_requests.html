@@ -70,7 +70,7 @@
 
   <div class="flex gap-2 items-center mt-6">
     <button type="submit" class="bg-blue-600 text-white px-4 py-1 rounded">Filter</button>
-    <a href="{{ url_for('admin_leave_requests') }}" class="bg-gray-400 text-white px-4 py-1 rounded">Reset</a>
+    <a href="{{ url_for('leave.admin_leave_requests') }}" class="bg-gray-400 text-white px-4 py-1 rounded">Reset</a>
   </div>
 
 </form>
@@ -125,7 +125,7 @@
         {% if total_pages > 1 %}
           <div class="flex justify-center space-x-2">
             {% for p in range(1, total_pages + 1) %}
-              <a href="{{ url_for('admin_leave_requests', page=p, **request.args.to_dict()) }}"
+              <a href="{{ url_for('leave.admin_leave_requests', page=p, **request.args.to_dict()) }}"
                  class="px-3 py-1 border rounded {% if p == page %}bg-blue-600 text-white{% endif %}">
                 {{ p }}
               </a>

@@ -36,15 +36,15 @@
                 <td class="p-2 text-center">{{ asset['Status'] }}</td>
                 <td class="p-2 space-x-2 text-center">
                     {% if asset['Status'] == 'Available' %}
-                        <a href="{{ url_for('allocate_asset', asset_id=asset['AssetId']) }}"
+                        <a href="{{ url_for('assets.allocate_asset', asset_id=asset['AssetId']) }}"
                         class="text-blue-600 hover:underline text">View</a>
                     {% else %}
                         <span class="text-gray-400 cursor-not-allowed text">View</span>
                     {% endif %}
                     
-                    <a href="{{ url_for('edit_asset', asset_id=asset['AssetId']) }}" class="text-yellow-600 hover:underline text">Edit</a>
+                    <a href="{{ url_for('assets.edit_asset', asset_id=asset['AssetId']) }}" class="text-yellow-600 hover:underline text">Edit</a>
 
-                    <a href="{{ url_for('delete_asset', asset_id=asset['AssetId']) }}"
+                    <a href="{{ url_for('assets.delete_asset', asset_id=asset['AssetId']) }}"
                     class="text-red-600 hover:underline text"
                     onclick="return confirm('Delete this asset?')">Delete</a>
                 </td>

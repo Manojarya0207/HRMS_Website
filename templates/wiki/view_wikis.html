@@ -18,7 +18,7 @@
     <div class="px-4 py-5 sm:p-6">
       <div class="mb-8 flex justify-between items-center">
         <h1 class="text-2xl font-bold">Wiki Pages</h1>
-        <a href="{{ url_for('add_wiki') }}"
+        <a href="{{ url_for('wiki.add_wiki') }}"
            class="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-dark">
           Add Wiki
         </a>
@@ -42,9 +42,9 @@
             <td class="px-4 py-3 text-center">{{ w[4] }}</td>
             <td class="px-4 py-3 text-center">{{ w[3]|todate }}</td>
             <td class="px-4 py-3 text-center">
-              <a href="{{ url_for('edit_wiki', wiki_id=w[0]) }}"
+              <a href="{{ url_for('wiki.edit_wiki', wiki_id=w[0]) }}"
                  class="text-blue-600 hover:underline">Edit</a>
-              <a href="{{ url_for('delete_wiki', wiki_id=w[0]) }}"
+              <a href="{{ url_for('wiki.delete_wiki', wiki_id=w[0]) }}"
                  onclick="return confirm('Delete {{ w[1] }}?')"
                  class="text-red-600 hover:underline ml-4">Delete</a>
             </td>

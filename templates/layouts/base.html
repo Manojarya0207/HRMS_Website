@@ -117,29 +117,29 @@
 {% endif %}
 {% endwith %}
 
-{% if session.user_id and request.endpoint not in ['login'] %}
+{% if session.user_id and request.endpoint not in ['auth.login'] %}
     {# ───────── sidebar width (admin 16 rem / employee 14 rem) ───────── #}
     {% set SIDEBAR_W = '64' if session.emp_type == 'admin' else '56' %}
     {% set emg_missing = session.get('emg_missing') %}
     {# ───────── helper flags to light up accordions ───────── #}
-    {% set employee_active = request.endpoint in ['add_employee','view_employees','registration_requests'] %}
-    {% set project_active  = request.endpoint in ['add_project','view_projects'] %}
-    {% set leave_active    = request.endpoint in ['admin_leave_types',
-                                                 'admin_leave_requests',
-                                                 'admin_leave_summary'] %}
-    {% set expense_active  = request.endpoint in ['admin_expense_types','expense', 'existing_expenses', 'admin_sub_expense_types'] %}
-    {% set task_active     = request.endpoint in ['add_task','view_tasks','admin_daily_tasks'] %}
-    {% set asset_active    = request.endpoint in ['add_asset','view_assets','manage_allocation','asset_history'] %}
-    {% set careers_active  = request.endpoint in ['add_job', 'view_jobs', 'employee_careers'] %}
-    {% set wiki_active     = request.endpoint in ['admin_wiki_categories','add_wiki','view_wikis','edit_wiki'] %}
-    {% set admin_dashboard_active = request.endpoint == 'admin_dashboard' %}
-    {% set employee_dashboard_active = request.endpoint == 'employee_dashboard' %}
-    {% set admin_wiki_views_active = request.endpoint == 'admin_wiki_views' %}
-    {% set employee_wiki_list_active = request.endpoint == 'employee_wiki_list' %}
-    {% set add_wiki_active = request.endpoint == 'add_wiki' %}
-    {% set view_wikis_active = request.endpoint == 'view_wikis' %}
-    
-    {% set employee_assets_active = request.endpoint in ['employee_assets'] %}
+    {% set employee_active = request.endpoint in ['employees.add_employee','employees.view_employees','employees.registration_requests'] %}
+    {% set project_active  = request.endpoint in ['projects.add_project','projects.view_projects'] %}
+    {% set leave_active    = request.endpoint in ['leave.admin_leave_types',
+                                                 'leave.admin_leave_requests',
+                                                 'leave.admin_leave_summary'] %}
+    {% set expense_active  = request.endpoint in ['expenses.admin_expense_types','expenses.expense', 'expenses.existing_expenses', 'expenses.admin_sub_expense_types'] %}
+    {% set task_active     = request.endpoint in ['tasks.add_task','tasks.view_tasks','tasks.admin_daily_tasks'] %}
+    {% set asset_active    = request.endpoint in ['assets.add_asset','assets.view_assets','assets.manage_allocation','assets.asset_history'] %}
+    {% set careers_active  = request.endpoint in ['careers.add_job', 'careers.view_jobs', 'careers.employee_careers'] %}
+    {% set wiki_active     = request.endpoint in ['wiki.admin_wiki_categories','wiki.add_wiki','wiki.view_wikis','wiki.edit_wiki'] %}
+    {% set admin_dashboard_active = request.endpoint == 'employees.admin_dashboard' %}
+    {% set employee_dashboard_active = request.endpoint == 'employees.employee_dashboard' %}
+    {% set admin_wiki_views_active = request.endpoint == 'wiki.admin_wiki_views' %}
+    {% set employee_wiki_list_active = request.endpoint == 'wiki.employee_wiki_list' %}
+    {% set add_wiki_active = request.endpoint == 'wiki.add_wiki' %}
+    {% set view_wikis_active = request.endpoint == 'wiki.view_wikis' %}
+
+    {% set employee_assets_active = request.endpoint in ['assets.employee_assets'] %}
 
 
     {# ───────── SIDEBAR (hidden md:block) ───────── #}
@@ -167,13 +167,13 @@
                 {%- endmacro %}
 
                 {{ navlink('Dashboard','fas fa-tachometer-alt',
-                           session.emp_type=='admin' and 'admin_dashboard'
-                           or 'employee_dashboard') }}
+                           session.emp_type=='admin' and 'employees.admin_dashboard'
+                           or 'employees.employee_dashboard') }}
 
                 {% if session.emp_type == 'admin' %}
 
                     <!-- Masters -->
-                    {% set masters_active = request.endpoint in ['admin_task_statuses', 'admin_employee_statuses'] %}
+                    {% set masters_active = request.endpoint in ['tasks.admin_task_statuses', 'tasks.admin_employee_statuses'] %}
                     <details class="group" {{ 'open' if masters_active else '' }}>
                         <summary class="flex items-center px-5 py-2 cursor-pointer rounded-md
                                         {{ 'bg-blue-100 text-green-600 font-medium' if masters_active
@@ -182,8 +182,8 @@
                             <i class="fas fa-chevron-down ml-auto transform transition group-open:rotate-180"></i>
                         </summary>
                         <div class="pl-9 mt-1 space-y-1">
-                            {{ navlink('Task Statuses','far fa-copy','admin_task_statuses') }}
-                            {{ navlink('Employee Statuses','fas fa-user-cog','admin_employee_statuses') }}
+                            {{ navlink('Task Statuses','far fa-copy','tasks.admin_task_statuses') }}
+                            {{ navlink('Employee Statuses','fas fa-user-cog','tasks.admin_employee_statuses') }}
                         </div>
                     </details>
 
@@ -196,9 +196,9 @@
                             <i class="fas fa-chevron-down ml-auto transform transition group-open:rotate-180"></i>
                         </summary>
                         <div class="pl-9 mt-1 space-y-1">
-                            {{ navlink('Add Employee','fas fa-user-plus','add_employee') }}
-                            {{ navlink('View Employees','fas fa-address-book','view_employees') }}
-                            {{ navlink('Registration Requests','fas fa-user-clock','registration_requests') }}
+                            {{ navlink('Add Employee','fas fa-user-plus','employees.add_employee') }}
+                            {{ navlink('View Employees','fas fa-address-book','employees.view_employees') }}
+                            {{ navlink('Registration Requests','fas fa-user-clock','employees.registration_requests') }}
                         </div>
                     </details>
 
@@ -211,8 +211,8 @@
                             <i class="fas fa-chevron-down ml-auto transform transition group-open:rotate-180"></i>
                         </summary>
                         <div class="pl-9 mt-1 space-y-1">
-                            {{ navlink('Add Project','fas fa-plus','add_project') }}
-                            {{ navlink('View Projects','fas fa-list','view_projects') }}
+                            {{ navlink('Add Project','fas fa-plus','projects.add_project') }}
+                            {{ navlink('View Projects','fas fa-list','projects.view_projects') }}
                         </div>
                     </details>
 
@@ -225,9 +225,9 @@
                             <i class="fas fa-chevron-down ml-auto transform transition group-open:rotate-180"></i>
                         </summary>
                         <div class="pl-9 mt-1 space-y-1">
-                            {{ navlink('Leave Types','fas fa-tags','admin_leave_types') }}
-                            {{ navlink('Requests','fas fa-envelope-open','admin_leave_requests') }}
-                            {{ navlink('Summary / Filter','fas fa-filter','admin_leave_summary') }}
+                            {{ navlink('Leave Types','fas fa-tags','leave.admin_leave_types') }}
+                            {{ navlink('Requests','fas fa-envelope-open','leave.admin_leave_requests') }}
+                            {{ navlink('Summary / Filter','fas fa-filter','leave.admin_leave_summary') }}
                         </div>
                     </details>
 
@@ -240,10 +240,10 @@
                             <i class="fas fa-chevron-down ml-auto transform transition group-open:rotate-180"></i>
                         </summary>
                         <div class="pl-9 mt-1 space-y-1">
-                            {{ navlink('Expense Types','fas fa-tag','admin_expense_types') }}
-                            {{ navlink('Sub Expense Types','fas fa-tags','admin_sub_expense_types') }}
-                            {{ navlink('Add Expenses','fas fa-clipboard-list','expense') }}
-                            {{ navlink('Expenses List','fas fa-list','existing_expenses') }}
+                            {{ navlink('Expense Types','fas fa-tag','expenses.admin_expense_types') }}
+                            {{ navlink('Sub Expense Types','fas fa-tags','expenses.admin_sub_expense_types') }}
+                            {{ navlink('Add Expenses','fas fa-clipboard-list','expenses.expense') }}
+                            {{ navlink('Expenses List','fas fa-list','expenses.existing_expenses') }}
                         </div>
                     </details>
 
@@ -256,73 +256,73 @@
                             <i class="fas fa-chevron-down ml-auto transform transition group-open:rotate-180"></i>
                         </summary>
                         <div class="pl-9 mt-1 space-y-1">
-                            {{ navlink('Add Task','fas fa-plus','add_task') }}
-                            {{ navlink('View Tasks','fas fa-list','view_tasks') }}
-                            {{ navlink('Daily Reports','fas fa-calendar-check','admin_daily_tasks') }}
+                            {{ navlink('Add Task','fas fa-plus','tasks.add_task') }}
+                            {{ navlink('View Tasks','fas fa-list','tasks.view_tasks') }}
+                            {{ navlink('Daily Reports','fas fa-calendar-check','tasks.admin_daily_tasks') }}
                         </div>
                     </details>
 
                     <!-- Assets -->
-                    <details class="group" {{ 'open' if request.endpoint in ['add_asset','view_assets', 'manage_allocation', 'asset_history'] else '' }}>
+                    <details class="group" {{ 'open' if request.endpoint in ['assets.add_asset','assets.view_assets', 'assets.manage_allocation', 'assets.asset_history'] else '' }}>
                         <summary class="flex items-center px-5 py-2 cursor-pointer rounded-md
-                                        {{ 'bg-blue-100 text-green-600 font-medium' if request.endpoint in ['add_asset','view_assets', 'manage_allocation', 'asset_history']
+                                        {{ 'bg-blue-100 text-green-600 font-medium' if request.endpoint in ['assets.add_asset','assets.view_assets', 'assets.manage_allocation', 'assets.asset_history']
                                         else 'text-gray-700 hover:bg-gray-100' }}">
                             <i class="fas fa-box-open w-4 mr-3"></i> Assets
                             <i class="fas fa-chevron-down ml-auto transform transition group-open:rotate-180"></i>
                         </summary>
                         <div class="pl-9 mt-1 space-y-1">
-                            {{ navlink('Add Asset','fas fa-plus','add_asset') }}
-                            {{ navlink('View Assets','fas fa-list','view_assets') }}
-                            <!--{{ navlink('Allocate Asset','fas fa-exchange-alt','allocate_asset') }}-->
-                            {{ navlink('Manage Allocations','fas fa-tasks','manage_allocation') }}
-                            {{ navlink('History','fas fa-history','asset_history') }}
+                            {{ navlink('Add Asset','fas fa-plus','assets.add_asset') }}
+                            {{ navlink('View Assets','fas fa-list','assets.view_assets') }}
+                            <!--{{ navlink('Allocate Asset','fas fa-exchange-alt','assets.allocate_asset') }}-->
+                            {{ navlink('Manage Allocations','fas fa-tasks','assets.manage_allocation') }}
+                            {{ navlink('History','fas fa-history','assets.asset_history') }}
                         </div>
                     </details>
 
                     <!-- Careers -->
-                    <details class="group" {{ 'open' if request.endpoint in ['add_job', 'view_jobs', 'employee_careers'] else '' }}>
+                    <details class="group" {{ 'open' if request.endpoint in ['careers.add_job', 'careers.view_jobs', 'careers.employee_careers'] else '' }}>
                         <summary class="flex items-center px-5 py-2 cursor-pointer rounded-md
-                                        {{ 'bg-blue-100 text-green-600 font-medium' if request.endpoint in ['add_job', 'view_jobs', 'employee_careers']
+                                        {{ 'bg-blue-100 text-green-600 font-medium' if request.endpoint in ['careers.add_job', 'careers.view_jobs', 'careers.employee_careers']
                                         else 'text-gray-700 hover:bg-gray-100' }}">
                             <i class="fas fa-briefcase w-4 mr-3"></i> Careers
                             <i class="fas fa-chevron-down ml-auto transform transition group-open:rotate-180"></i>
                         </summary>
                         <div class="pl-9 mt-1 space-y-1">
                             {% if session.emp_type == 'admin' %}
-                                {{ navlink('Add Job','fas fa-plus','add_job') }}
-                                {{ navlink('View Jobs','fas fa-list','view_jobs') }}
+                                {{ navlink('Add Job','fas fa-plus','careers.add_job') }}
+                                {{ navlink('View Jobs','fas fa-list','careers.view_jobs') }}
                             {% else %}
-                                {{ navlink('Careers','fas fa-briefcase','employee_careers') }}
+                                {{ navlink('Careers','fas fa-briefcase','careers.employee_careers') }}
                             {% endif %}
                         </div>
                     </details>
 
                     <!-- Wiki -->
-                    <details class="group" {{ 'open' if request.endpoint in ['admin_wiki_categories','add_wiki','view_wikis','edit_wiki', 'admin_wiki_views'] else '' }}>
+                    <details class="group" {{ 'open' if request.endpoint in ['wiki.admin_wiki_categories','wiki.add_wiki','wiki.view_wikis','wiki.edit_wiki', 'wiki.admin_wiki_views'] else '' }}>
                         <summary class="flex items-center px-5 py-2 cursor-pointer rounded-md
-                                        {{ 'bg-blue-100 text-green-600 font-medium' if request.endpoint in ['admin_wiki_categories','add_wiki','view_wikis','edit_wiki', 'admin_wiki_views'] else 'text-gray-700 hover:bg-gray-100' }}">
+                                        {{ 'bg-blue-100 text-green-600 font-medium' if request.endpoint in ['wiki.admin_wiki_categories','wiki.add_wiki','wiki.view_wikis','wiki.edit_wiki', 'wiki.admin_wiki_views'] else 'text-gray-700 hover:bg-gray-100' }}">
                             <i class="fas fa-book w-4 mr-3"></i> Wiki
                             <i class="fas fa-chevron-down ml-auto transform transition group-open:rotate-180"></i>
                         </summary>
                         <div class="pl-9 mt-1 space-y-1">
-                            {{ navlink('Categories','fas fa-tags','admin_wiki_categories') }}
-                            {{ navlink('Add Wiki','fas fa-plus','add_wiki') }}
-                            {{ navlink('View Wikis','fas fa-list','view_wikis') }}
-                            {{ navlink('Wiki Views','fas fa-eye','admin_wiki_views') }}
+                            {{ navlink('Categories','fas fa-tags','wiki.admin_wiki_categories') }}
+                            {{ navlink('Add Wiki','fas fa-plus','wiki.add_wiki') }}
+                            {{ navlink('View Wikis','fas fa-list','wiki.view_wikis') }}
+                            {{ navlink('Wiki Views','fas fa-eye','wiki.admin_wiki_views') }}
                         </div>
                     </details>
 
                     {% else %}
                     {% set disabled = 'pointer-events-none opacity-50' if emg_missing else '' %}
                     <div>
-                        {{ navlink('Daily Tasks','fas fa-calendar-check','employee_daily_tasks') }}
-                        {{ navlink('Manage Expense','fas fa-money-bill-wave','expense') }}
-                        {{ navlink('My Expense','fas fa-list','existing_expenses') }}
-                        {{ navlink('Leave Request','fas fa-plane-departure','employee_leave') }}
-                        {{ navlink('My Leave Request','fas fa-clock','employee_leave_requests') }}
-                        <!-- {{ navlink('Careers','fas fa-briefcase','employee_careers') }} -->
-                        {{ navlink('My Assets','fas fa-box','employee_assets') }}
-                        {{ navlink('Wiki','fas fa-book','employee_wiki_list') }}
+                        {{ navlink('Daily Tasks','fas fa-calendar-check','tasks.employee_daily_tasks') }}
+                        {{ navlink('Manage Expense','fas fa-money-bill-wave','expenses.expense') }}
+                        {{ navlink('My Expense','fas fa-list','expenses.existing_expenses') }}
+                        {{ navlink('Leave Request','fas fa-plane-departure','leave.employee_leave') }}
+                        {{ navlink('My Leave Request','fas fa-clock','leave.employee_leave_requests') }}
+                        <!-- {{ navlink('Careers','fas fa-briefcase','careers.employee_careers') }} -->
+                        {{ navlink('My Assets','fas fa-box','assets.employee_assets') }}
+                        {{ navlink('Wiki','fas fa-book','wiki.employee_wiki_list') }}
                     </div>
                     {% endif %}
             </nav>
@@ -342,7 +342,7 @@
 
         <div class="ml-auto flex items-center space-x-4">
             {% if session.emp_type == 'emp' %}
-                <a href="{{ url_for('employee_profile_view') }}"
+                <a href="{{ url_for('employees.employee_profile_view') }}"
                 class="text-sm px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
                     <i class="fas fa-user-circle mr-1"></i>My Profile
                 </a>
@@ -387,7 +387,7 @@
       </button>
 
       <!-- use GET or POST to match your route -->
-      <form action="{{ url_for('logout') }}" method="post">
+      <form action="{{ url_for('auth.logout') }}" method="post">
         <button type="submit"
                 class="px-4 py-2 rounded-md bg-red-600 hover:bg-red-700 text-white">
           Logout

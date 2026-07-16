@@ -10,7 +10,7 @@
             <h2 class="text-3xl font-extrabold text-gray-900 tracking-tight">Edit Task Update</h2>
             <p class="mt-2 text-sm text-gray-500">Update details of your submitted daily report.</p>
         </div>
-        <a href="{{ url_for('employee_daily_tasks') }}"
+        <a href="{{ url_for('tasks.employee_daily_tasks') }}"
             class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-xs font-semibold text-gray-700 bg-white hover:bg-gray-50 transition">
             <i class="fas fa-arrow-left mr-2 text-gray-500"></i> Back to History
         </a>
@@ -96,7 +96,7 @@
 
                 <!-- Action Buttons -->
                 <div class="flex items-center justify-end gap-4 pt-4">
-                    <a href="{{ url_for('employee_daily_tasks') }}"
+                    <a href="{{ url_for('tasks.employee_daily_tasks') }}"
                         class="px-5 py-2.5 text-sm font-bold text-teal-700 hover:text-teal-900 focus:outline-none transition uppercase">
                         Cancel
                     </a>

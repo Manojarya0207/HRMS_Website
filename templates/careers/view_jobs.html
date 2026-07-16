@@ -50,11 +50,11 @@
                         </td>
                         <td class="px-6 py-4">
                             <div class="flex space-x-2 gap-4">
-                                <a href="{{ url_for('edit_job', id=job.CareerId) }}"
+                                <a href="{{ url_for('careers.edit_job', id=job.CareerId) }}"
                                    class="text-yellow-600 hover:text-yellow-900">
                                    <i class="fas fa-edit"></i>
                                 </a>
-                                <a href="{{ url_for('delete_job', id=job.CareerId) }}"
+                                <a href="{{ url_for('careers.delete_job', id=job.CareerId) }}"
                                    class="text-red-600 hover:text-red-900"
                                    onclick="return confirm('Delete this job?')">
                                    <i class="fas fa-trash"></i>

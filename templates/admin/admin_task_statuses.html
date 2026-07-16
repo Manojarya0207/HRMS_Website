@@ -58,7 +58,7 @@
                                     <i class="fas fa-pencil-alt text-base"></i>
                                 </button>
                                 <a href="javascript:void(0);" 
-                                   onclick="confirmDelete('task status', {{ status[0] }}, '{{ url_for('delete_task_status', status_id=status[0]) }}')"
+                                   onclick="confirmDelete('task status', {{ status[0] }}, '{{ url_for('tasks.delete_task_status', status_id=status[0]) }}')"
                                    class="text-red-600 hover:text-red-900 transition-colors" title="Delete">
                                     <i class="fas fa-trash-alt text-base"></i>
                                 </a>
@@ -213,7 +213,7 @@ function applyPreset(name, desc, color) {
 
 function openAddModal() {
     modalTitle.textContent = "Create Status";
-    modalForm.action = "{{ url_for('admin_task_statuses') }}";
+    modalForm.action = "{{ url_for('tasks.admin_task_statuses') }}";
     statusNameInput.value = "";
     statusDescInput.value = "";
     selectColor("#6b7280");

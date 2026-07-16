@@ -17,7 +17,7 @@
     {% endwith %}
   <h1 class="text-2xl font-semibold mb-4 text-center text-gray-800">Quick Delete Tool</h1>
 
-  <form method="get" action="{{ url_for('admin_quick_delete') }}" class="mb-6">
+  <form method="get" action="{{ url_for('employees.admin_quick_delete') }}" class="mb-6">
     <label for="category" class="block text-sm font-medium text-gray-700 mb-2">Select Category</label>
     <div class="flex gap-4 items-center">
       <select name="category" id="category" onchange="this.form.submit()"
@@ -32,7 +32,7 @@
   </form>
 
   {% if data %}
-  <form method="post" action="{{ url_for('delete_all_category', category=category) }}"
+  <form method="post" action="{{ url_for('employees.delete_all_category', category=category) }}"
       onsubmit="return confirm('Are you sure you want to delete ALL {{ category.replace('_', ' ') }}s?')">
     <button type="submit"
             class="mt-4 inline-block bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">
@@ -63,19 +63,19 @@
           </td>
           <td class="px-4 py-2">
             {% if category == 'employee' %}
-              <a href="{{ url_for('delete_employee', emp_id=item[0]) }}"
+              <a href="{{ url_for('employees.delete_employee', emp_id=item[0]) }}"
                  onclick="return confirm('Delete this employee?')"
                  class="text-red-600 hover:text-red-800 font-medium">Delete</a>
             {% elif category == 'task' %}
-              <a href="{{ url_for('delete_task', task_id=item[0]) }}"
+              <a href="{{ url_for('tasks.delete_task', task_id=item[0]) }}"
                  onclick="return confirm('Delete this task?')"
                  class="text-red-600 hover:text-red-800 font-medium">Delete</a>
             {% elif category == 'leave_type' %}
-              <a href="{{ url_for('delete_leave_type', lt_id=item[0]) }}"
+              <a href="{{ url_for('leave.delete_leave_type', lt_id=item[0]) }}"
                  onclick="return confirm('Delete this leave type?')"
                  class="text-red-600 hover:text-red-800 font-medium">Delete</a>
             {% elif category == 'expense_type' %}
-              <a href="{{ url_for('delete_expense_type', et_id=item[0]) }}"
+              <a href="{{ url_for('expenses.delete_expense_type', et_id=item[0]) }}"
                  onclick="return confirm('Delete this expense type?')"
                  class="text-red-600 hover:text-red-800 font-medium">Delete</a>
             {% endif %}

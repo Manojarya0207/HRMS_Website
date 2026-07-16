@@ -24,7 +24,7 @@
 
     <!-- Stats Cards -->
     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 mb-8">
-        <a href="{{ url_for('view_employees') }}"
+        <a href="{{ url_for('employees.view_employees') }}"
             class="block bg-white overflow-hidden shadow rounded-lg hover:bg-gray-50 transition duration-200 cursor-pointer">
             <div class="p-4 sm:p-5">
                 <div class="flex items-center">
@@ -41,7 +41,7 @@
             </div>
         </a>
 
-        <a href="{{ url_for('view_projects') }}"
+        <a href="{{ url_for('projects.view_projects') }}"
             class="block bg-white overflow-hidden shadow rounded-lg hover:bg-gray-50 transition duration-200 cursor-pointer">
             <div class="p-4 sm:p-5">
                 <div class="flex items-center">
@@ -58,7 +58,7 @@
             </div>
         </a>
 
-        <a href="{{ url_for('view_tasks') }}"
+        <a href="{{ url_for('tasks.view_tasks') }}"
             class="block bg-white overflow-hidden shadow rounded-lg hover:bg-gray-50 transition duration-200 cursor-pointer">
             <div class="p-4 sm:p-5">
                 <div class="flex items-center">
@@ -179,7 +179,7 @@
                                 </td>
                                 <td class="px-4 py-4 whitespace-nowrap text-sm font-medium">
                                     <div class="flex space-x-2">
-                                        <a href="{{ url_for('show_task_details', task_id=task[0]) }}"
+                                        <a href="{{ url_for('tasks.show_task_details', task_id=task[0]) }}"
                                             class="text-blue-600 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 px-2 py-1 rounded-md text-xs transition duration-200">
                                             <i class="fas fa-eye mr-1"></i>View
                                         </a>
@@ -202,16 +202,16 @@
                     </div>
                     <div class="flex space-x-2">
                         {% if page > 1 %}
-                        <a href="{{ url_for('admin_dashboard', page=page-1, project_filter=project_filter, status_filter=status_filter, employee_filter=employee_filter) }}"
+                        <a href="{{ url_for('employees.admin_dashboard', page=page-1, project_filter=project_filter, status_filter=status_filter, employee_filter=employee_filter) }}"
                             class="px-3 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200">Previous</a>
                         {% endif %}
                         {% for p in range(1, total_pages + 1) %}
-                        <a href="{{ url_for('admin_dashboard', page=p, project_filter=project_filter, status_filter=status_filter, employee_filter=employee_filter) }}"
+                        <a href="{{ url_for('employees.admin_dashboard', page=p, project_filter=project_filter, status_filter=status_filter, employee_filter=employee_filter) }}"
                             class="px-3 py-2 rounded-md {% if p == page %}bg-blue-500 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">{{
                             p }}</a>
                         {% endfor %}
                         {% if page < total_pages %} <a
-                            href="{{ url_for('admin_dashboard', page=page+1, project_filter=project_filter, status_filter=status_filter, employee_filter=employee_filter) }}"
+                            href="{{ url_for('employees.admin_dashboard', page=page+1, project_filter=project_filter, status_filter=status_filter, employee_filter=employee_filter) }}"
                             class="px-3 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200">Next</a>
                             {% endif %}
                     </div>
@@ -231,7 +231,7 @@
 
         // Redirect to the dashboard with filter and page parameters
         const url = new URL(window.location.href);
-        url.pathname = "{{ url_for('admin_dashboard') }}";
+        url.pathname = "{{ url_for('employees.admin_dashboard') }}";
         url.searchParams.set('page', currentPage);
         if (projectFilter) url.searchParams.set('project_filter', projectFilter);
         else url.searchParams.delete('project_filter');

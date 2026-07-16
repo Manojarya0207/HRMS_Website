@@ -51,12 +51,12 @@
     </div>
 
     <!-- Filter Buttons -->
-    <form id="filterForm" method="get" action="{{ url_for('admin_wiki_views') }}" class="flex gap-2">
+    <form id="filterForm" method="get" action="{{ url_for('wiki.admin_wiki_views') }}" class="flex gap-2">
       <button type="submit"
               class="bg-primary text-white px-4 py-2 rounded hover:bg-primary-dark">
         Apply Filters
       </button>
-      <a href="{{ url_for('admin_wiki_views') }}"
+      <a href="{{ url_for('wiki.admin_wiki_views') }}"
          class="bg-gray-200 text-gray-700 px-4 py-2 rounded hover:bg-gray-300">
         Reset Filters
       </a>

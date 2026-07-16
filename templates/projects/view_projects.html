@@ -85,16 +85,16 @@
                                     </button>
                                     <div
                                         class="hidden fixed origin-top-right z-50 w-36 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 dropdown-menu">
-                                        <a href="{{ url_for('view_project', project_id=project[0]) }}"
+                                        <a href="{{ url_for('projects.view_project', project_id=project[0]) }}"
                                             class="block px-4 py-2 text-sm text-blue-700 hover:bg-blue-100">
                                             <i class="fas fa-eye mr-1 text-blue-500"></i> View
                                         </a>
-                                        <a href="{{ url_for('edit_project', project_id=project[0]) }}"
+                                        <a href="{{ url_for('projects.edit_project', project_id=project[0]) }}"
                                             class="block px-4 py-2 text-sm text-yellow-700 hover:bg-yellow-100">
                                             <i class="fas fa-edit mr-1 text-yellow-600"></i> Edit
                                         </a>
                                         <button data-project-id="{{ project[0] }}"
-                                            data-delete-url="{{ url_for('delete_project', project_id=project[0]) }}"
+                                            data-delete-url="{{ url_for('projects.delete_project', project_id=project[0]) }}"
                                             onclick="confirmDelete('project', this.dataset.projectId, this.dataset.deleteUrl)"
                                             class="w-full text-left px-4 py-2 text-sm text-red-700 hover:bg-red-100">
                                             <i class="fas fa-trash mr-1"></i> Delete

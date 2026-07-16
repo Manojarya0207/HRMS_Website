@@ -68,7 +68,7 @@
                                     <i class="fas fa-pencil-alt text-base"></i>
                                 </button>
                                 <a href="javascript:void(0);" data-id="{{ status[0] }}"
-                                    data-url="{{ url_for('delete_employee_status', status_id=status[0]) }}"
+                                    data-url="{{ url_for('tasks.delete_employee_status', status_id=status[0]) }}"
                                     onclick="confirmDelete('employee status', this.dataset.id, this.dataset.url)"
                                     class="text-red-600 hover:text-red-900 transition-colors" title="Delete">
                                     <i class="fas fa-trash-alt text-base"></i>
@@ -240,7 +240,7 @@
 
     function openAddModal() {
         modalTitle.textContent = "Create Status";
-        modalForm.action = "{{ url_for('admin_employee_statuses') }}";
+        modalForm.action = "{{ url_for('tasks.admin_employee_statuses') }}";
         statusNameInput.value = "";
         statusDescInput.value = "";
         selectColor("#6b7280");

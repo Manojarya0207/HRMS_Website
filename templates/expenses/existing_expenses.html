@@ -50,7 +50,7 @@
     {% if session.emp_type == 'admin' %}
     <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
       <h3 class="text-lg font-semibold mb-3">Generate Employee Expense Report</h3>
-      <form method="get" action="{{ url_for('generate_expense_report_form') }}" class="flex items-center space-x-3">
+      <form method="get" action="{{ url_for('expenses.generate_expense_report_form') }}" class="flex items-center space-x-3">
         <select name="emp_id" required class="border px-3 py-2 rounded flex-1">
           <option value="">Select Employee</option>
           {% for emp in employees %}
@@ -96,10 +96,10 @@
       <input type="date" name="to_date" value="{{ request.args.get('to_date', '') }}" class="border px-3 py-2 rounded">
       <div class="flex items-center space-x-2">
         <button type="submit" class="bg-blue-600 text-white px-2 py-2 rounded hover:bg-blue-700">Apply</button>
-        <a href="{{ url_for('existing_expenses') }}"
+        <a href="{{ url_for('expenses.existing_expenses') }}"
           class="bg-gray-500 text-white px-2 py-2 rounded hover:bg-gray-600">Reset</a>
         {% if session.emp_type == 'admin' %}
-        <a href="{{ url_for('export_expenses') }}" title="Download"
+        <a href="{{ url_for('expenses.export_expenses') }}" title="Download"
           class="bg-green-600 text-white px-2 py-2 rounded hover:bg-green-700">
           <i class="fa-solid fa-download"></i>
         </a>

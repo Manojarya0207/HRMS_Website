@@ -67,7 +67,7 @@
                                 <p><i class="fa fa-bolt mr-1"></i><strong>Priority:</strong> {{ task[2].title() }}</p>
                                 <p><i class="fa fa-thumbtack mr-1"></i><strong>Status:</strong> {{ task[3].replace('_', ' ').title() }}</p>
                             </div>
-                            <a href="{{ url_for('view_task_details', task_id=task[0]) }}"
+                            <a href="{{ url_for('tasks.view_task_details', task_id=task[0]) }}"
                                class="inline-block mt-4 text-sm text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md transition"><i class="fa fa-eye mr-2"></i>View Updates</a>
                         </div>
                     {% endfor %}
@@ -108,7 +108,7 @@
                                 <p><i class="fa fa-bolt mr-1"></i><strong>Priority:</strong> {{ task[2].title() }}</p>
                                 <p><i class="fa fa-thumbtack mr-1"></i><strong>Status:</strong> {{ task[3].replace('_', ' ').title() }}</p>
                             </div>
-                            <a href="{{ url_for('view_task_details', task_id=task[0]) }}"
+                            <a href="{{ url_for('tasks.view_task_details', task_id=task[0]) }}"
                                class="inline-block mt-4 text-sm text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md transition"><i class="fa fa-eye mr-2"></i>View Updates</a>
                         </div>
                     {% endfor %}

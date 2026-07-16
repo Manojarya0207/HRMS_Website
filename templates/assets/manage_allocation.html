@@ -43,7 +43,7 @@
                                 {% set issue_text = parts[1] %}
                                 <li>
                                     <span class="text-red-600">{{ issue_text }}</span>
-                                    <form method="POST" action="{{ url_for('resolve_issue', issue_id=issue_id) }}" class="mt-1">
+                                    <form method="POST" action="{{ url_for('assets.resolve_issue', issue_id=issue_id) }}" class="mt-1">
                                         <input type="text" name="resolved_comment" required
                                             class="border text-sm p-1 rounded w-48" placeholder="Resolution comment">
                                         <button type="submit"
@@ -60,7 +60,7 @@
                 </td>
                 <td class="p-2 text-center">
                     {% if row['Status'] == 'Allocated' %}
-                        <a href="{{ url_for('edit_allocation', alloc_id=row['AllocatedId']) }}" class="text-blue-600 hover:underline">Return</a>
+                        <a href="{{ url_for('assets.edit_allocation', alloc_id=row['AllocatedId']) }}" class="text-blue-600 hover:underline">Return</a>
                     {% endif %}
                 </td>
             </tr>

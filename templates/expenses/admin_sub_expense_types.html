@@ -71,7 +71,7 @@
                     {% if edit_type %}Update{% else %}Add{% endif %}
                 </button>
                 {% if edit_type %}
-                <a href="{{ url_for('admin_sub_expense_types') }}" 
+                <a href="{{ url_for('expenses.admin_sub_expense_types') }}" 
                    class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600">
                     Cancel
                 </a>
@@ -101,7 +101,7 @@
                         <td class="px-6 py-4">
                             <a href="?edit_id={{ st[0] }}" 
                                class="text-blue-600 hover:text-blue-800 mr-4">Edit</a>
-                            <a href="{{ url_for('delete_sub_expense_type', sub_et_id=st[0]) }}" 
+                            <a href="{{ url_for('expenses.delete_sub_expense_type', sub_et_id=st[0]) }}" 
                                onclick="return confirm('Are you sure?')"
                                class="text-red-600 hover:text-red-800">Delete</a>
                         </td>

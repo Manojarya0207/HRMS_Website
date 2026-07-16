@@ -1,0 +1,93 @@
+"""Project data-access methods (moved verbatim from database.py)."""
+
+
+class ProjectMixin:
+    def add_project(self, data):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+
+        cursor.execute('''
+            INSERT INTO tbl_project
+            (project_name, priority, project_desc, project_status, start_date, end_date)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (data['project_name'], data['priority'], data['project_desc'],
+              data['project_status'], data['start_date'], data['end_date']))
+
+        conn.commit()
+        conn.close()
+
+    def update_project(self, project_id, data):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+
+        cursor.execute('''
+            UPDATE tbl_project
+            SET project_name = ?, priority = ?, project_desc = ?, project_status = ?,
+                start_date = ?, end_date = ?
+            WHERE project_id = ?
+        ''', (data['project_name'], data['priority'], data['project_desc'],
+              data['project_status'], data['start_date'], data['end_date'], project_id))
+
+        conn.commit()
+        conn.close()
+
+    def delete_project(self, project_id):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+
+        # Check for associated tasks
+        cursor.execute('SELECT COUNT(*) FROM tbl_task WHERE project_id = ?', (project_id,))
+        task_count = cursor.fetchone()[0]
+
+        if task_count > 0:
+            conn.close()
+            raise Exception('Cannot delete project with assigned tasks.')
+
+        cursor.execute('DELETE FROM tbl_project WHERE project_id = ?', (project_id,))
+        conn.commit()
+        conn.close()
+
+    def get_project(self, project_id):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+
+        cursor.execute('''
+            SELECT project_id, project_name, priority, project_desc, project_status, start_date, end_date
+            FROM tbl_project
+            WHERE project_id = ?
+        ''', (project_id,))
+
+        project = cursor.fetchone()
+        conn.close()
+        return project
+
+    def get_projects(self):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+
+        cursor.execute('''
+            SELECT project_id, project_name, priority, project_desc, project_status, start_date, end_date, inserted_date
+            FROM tbl_project
+            ORDER BY inserted_date DESC
+        ''')
+
+        projects = cursor.fetchall()
+        conn.close()
+        return projects
+
+    def get_tasks_by_project(self, project_id):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+
+        cursor.execute('''
+            SELECT t.task_id, t.task_desc, t.project_id, t.emp_id, t.priority, t.status,
+                   t.start_date, t.end_date, e.first_name, e.last_name
+            FROM tbl_task t
+            JOIN tbl_employee e ON t.emp_id = e.emp_id
+            WHERE t.project_id = ?
+            ORDER BY t.inserted_date DESC
+        ''', (project_id,))
+
+        tasks = cursor.fetchall()
+        conn.close()
+        return tasks

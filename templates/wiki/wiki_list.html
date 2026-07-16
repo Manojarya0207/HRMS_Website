@@ -25,7 +25,7 @@
     {% endif %}
     <h2 class="text-xl font-semibold mb-2">{{ w[1] }}</h2>
     <p class="text-sm text-gray-500">{{ w[4] }} | {{ w[3]|todate }}</p>
-    <a href="{{ url_for('wiki_detail', wiki_id=w[0]) }}"
+    <a href="{{ url_for('wiki.wiki_detail', wiki_id=w[0]) }}"
        class="inline-block mt-4 text-primary hover:underline">
       Read More →
     </a>

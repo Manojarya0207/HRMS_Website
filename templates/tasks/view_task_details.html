@@ -66,7 +66,7 @@
                     
                     <!-- Body -->
                     <div style="padding: 24px;">
-                        <form method="POST" id="taskUpdateForm" action="{{ url_for('add_task_detail') }}">
+                        <form method="POST" id="taskUpdateForm" action="{{ url_for('tasks.add_task_detail') }}">
                             <input type="hidden" name="task_id" id="modalTaskId">
                             <input type="hidden" name="detail_id" id="modalDetailId">
                             <input type="hidden" name="project_id" id="modalProjectId" value="{{ project[0] }}">
@@ -142,7 +142,7 @@
                     class="flex-1 sm:flex-none bg-primary text-white px-3 sm:px-4 py-2 rounded-md hover:bg-blue-700 transition duration-200 text-sm sm:text-base">
                     <i class="fas fa-plus mr-1"></i>Add Update
                 </button>
-                <a href="{{ url_for('employee_dashboard') }}"
+                <a href="{{ url_for('employees.employee_dashboard') }}"
                    class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
                     Back to Dashboard
                 </a>
@@ -163,7 +163,7 @@ function openTaskUpdateForm(taskId, taskName) {
     document.getElementById('desc').value = '';
     document.getElementById('status').value = 'incomplete';
     document.getElementById('modalDetailId').value = '';
-    document.getElementById('taskUpdateForm').action = '{{ url_for("add_task_detail") }}';
+    document.getElementById('taskUpdateForm').action = '{{ url_for("tasks.add_task_detail") }}';
     modal.style.display = 'block';
     setTimeout(() => { document.getElementById('desc').focus(); }, 100);
 }

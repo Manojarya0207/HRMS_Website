@@ -49,7 +49,7 @@
         {% if edit_type %}
           <input type="hidden" name="leave_type_id" value="{{ edit_type[0] }}">
           <button class="bg-yellow-500 text-white px-4 py-2 rounded-md">Update</button>
-          <a href="{{ url_for('admin_leave_types') }}"
+          <a href="{{ url_for('leave.admin_leave_types') }}"
             class="bg-gray-400 text-white px-4 py-2 rounded-md ml-2">Cancel</a>
         {% else %}
           <button class="bg-primary text-white px-4 py-2 rounded-md">Add</button>
@@ -71,9 +71,9 @@
             <td class="px-4 py-3 text-center">{{ loop.index }}</td>
             <td class="px-4 py-3 text-center">{{ lt[1] }}</td>
             <td class="px-4 py-3 text-center">
-              <a href="{{ url_for('admin_leave_types') }}?edit_id={{ lt[0] }}"
+              <a href="{{ url_for('leave.admin_leave_types') }}?edit_id={{ lt[0] }}"
                 class="text-blue-600 hover:underline mr-4">Edit</a>
-              <a href="{{ url_for('delete_leave_type', lt_id=lt[0]) }}"
+              <a href="{{ url_for('leave.delete_leave_type', lt_id=lt[0]) }}"
                 onclick="return confirm('Delete {{ lt[1] }}?')"
                 class="text-red-600 hover:underline">Delete</a>
             </td>

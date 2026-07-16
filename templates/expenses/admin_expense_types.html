@@ -29,7 +29,7 @@
         <div>
           <h1 class="text-2xl font-bold">Expense Types</h1>
         </div>
-        <a href="{{ url_for('expense') }}" class="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-dark">
+        <a href="{{ url_for('expenses.expense') }}" class="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-dark">
           Add Expenses
         </a>
       </div>
@@ -57,7 +57,7 @@
     <!-- Edit -->
     <button @click="open = true" class="text-blue-600 hover:underline">Edit</button>
     <!-- Delete -->
-    <a href="{{ url_for('delete_expense_type', et_id=t[0]) }}"
+    <a href="{{ url_for('expenses.delete_expense_type', et_id=t[0]) }}"
        onclick="return confirm('Delete {{ t[1] }}?')"
        class="text-red-600 hover:underline ml-4">Delete</a>
 
@@ -66,7 +66,7 @@
     <div x-show="open" x-cloak class="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
       <div class="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
         <h2 class="text-xl font-bold mb-4">Edit Expense Type</h2>
-        <form method="POST" action="{{ url_for('edit_expense_type', et_id=t[0]) }}">
+        <form method="POST" action="{{ url_for('expenses.edit_expense_type', et_id=t[0]) }}">
           <input type="text" name="new_expense_type" value="{{ t[1] }}" required maxlength="50"
                  class="w-full border rounded px-3 py-2 mb-4">
           <div class="flex justify-end gap-3">
