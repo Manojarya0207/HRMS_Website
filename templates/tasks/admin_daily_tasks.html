@@ -96,6 +96,10 @@
                                         <i class="far fa-clock mr-1"></i> {{ task[5]|format_ist }}
                                     </span>
                                     <span class="text-slate-300 text-xs">|</span>
+                                    <span class="text-[11px] text-slate-500 flex items-center">
+                                        <i class="fas fa-hourglass-half mr-1"></i> Hours: {{ task[9] }}
+                                    </span>
+                                    <span class="text-slate-300 text-xs">|</span>
                                     <!-- Project Status Badge -->
                                     {% if task[4] == 'Completed' %}
                                         <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-green-50 text-green-700 border border-green-100">

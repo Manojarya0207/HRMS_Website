@@ -344,6 +344,26 @@ class DatabaseBase:
                 VALUES (?, ?, ?)
             ''', default_employee_statuses)
 
+        # Create tbl_daily_task
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS tbl_daily_task (
+                daily_task_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                emp_id INTEGER NOT NULL,
+                task_title TEXT NOT NULL,
+                task_desc TEXT NOT NULL,
+                project_status TEXT NOT NULL,
+                inserted_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+                admin_feedback TEXT,
+                task_hours INTEGER DEFAULT 0,
+                FOREIGN KEY (emp_id) REFERENCES tbl_employee (emp_id)
+            )
+        ''')
+
+        try:
+            cursor.execute('ALTER TABLE tbl_daily_task ADD COLUMN task_hours INTEGER DEFAULT 0')
+        except sqlite3.OperationalError:
+            pass
+
         conn.commit()
         conn.close()
 

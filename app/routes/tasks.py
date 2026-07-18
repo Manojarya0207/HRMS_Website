@@ -2,7 +2,7 @@
 (moved verbatim from app.py)."""
 import math
 import logging
-from datetime import date
+from datetime import date, datetime, timedelta
 
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash, jsonify
 
@@ -197,6 +197,19 @@ def employee_daily_tasks():
 
     statuses = db.get_task_statuses()
 
+    # Get search dates, default to current local date in IST
+    start_date = request.args.get('start_date', '').strip()
+    end_date = request.args.get('end_date', '').strip()
+    
+    if not start_date or not end_date:
+        # Default to today's date in IST (UTC+5:30)
+        current_ist = (datetime.utcnow() + timedelta(hours=5, minutes=30)).date()
+        current_ist_str = current_ist.strftime("%Y-%m-%d")
+        if not start_date:
+            start_date = current_ist_str
+        if not end_date:
+            end_date = current_ist_str
+
     if request.method == 'POST':
         if not statuses:
             flash("Cannot submit task. Wait for admin status update.", "error")
@@ -204,16 +217,66 @@ def employee_daily_tasks():
         title = request.form.get('task_title', '').strip()
         desc = request.form.get('task_desc', '').strip()
         project_status = request.form.get('project_status', '').strip()
+        task_hours = request.form.get('task_hours', '').strip()
 
-        if not title or not desc or not project_status:
+        if not title or not desc or not project_status or not task_hours:
             flash("All fields are required.", "error")
         else:
-            db.add_daily_task(session['user_id'], title, desc, project_status)
-            flash("Daily task submitted successfully!", "success")
-            return redirect(url_for('tasks.employee_daily_tasks'))
+            try:
+                hours_val = int(task_hours)
+                if hours_val <= 0 or hours_val > 24:
+                    raise ValueError
+            except ValueError:
+                flash("Hours must be a valid number between 1 and 24.", "error")
+                return redirect(url_for('tasks.employee_daily_tasks', start_date=start_date, end_date=end_date))
 
-    daily_tasks = db.get_daily_tasks_by_employee(session['user_id'])
-    return render_template('tasks/employee_daily_tasks.html', daily_tasks=daily_tasks, statuses=statuses)
+            db.add_daily_task(session['user_id'], title, desc, project_status, hours_val)
+            flash("Daily task submitted successfully!", "success")
+            return redirect(url_for('tasks.employee_daily_tasks', start_date=start_date, end_date=end_date))
+
+    daily_tasks = db.get_daily_tasks_by_employee(session['user_id'], start_date, end_date)
+
+    # Group daily tasks by date (IST conversion)
+    grouped_tasks = {}
+    for task in daily_tasks:
+        dt_val = task[5] # inserted_date
+        if isinstance(dt_val, str):
+            try:
+                dt = datetime.strptime(dt_val, "%Y-%m-%d %H:%M:%S")
+            except ValueError:
+                try:
+                    dt = datetime.strptime(dt_val, "%Y-%m-%d %H:%M:%S.%f")
+                except ValueError:
+                    dt = datetime.utcnow() # fallback
+        else:
+            dt = dt_val
+
+        # Convert to IST date
+        ist_dt = dt + timedelta(hours=5, minutes=30)
+        date_raw = ist_dt.strftime("%Y-%m-%d")
+        display_date = ist_dt.strftime("%d-%m-%Y") # formatted as DD-MM-YYYY
+
+        if date_raw not in grouped_tasks:
+            grouped_tasks[date_raw] = {
+                'date': display_date,
+                'date_raw': date_raw,
+                'tasks': [],
+                'total_hours': 0,
+                'count': 0
+            }
+        grouped_tasks[date_raw]['tasks'].append(task)
+        grouped_tasks[date_raw]['total_hours'] += (task[7] or 0)
+        grouped_tasks[date_raw]['count'] += 1
+
+    summary_list = list(grouped_tasks.values())
+    summary_list.sort(key=lambda x: x['date_raw'], reverse=True)
+
+    return render_template('tasks/employee_daily_tasks.html',
+                           daily_tasks=daily_tasks,
+                           summary_list=summary_list,
+                           statuses=statuses,
+                           start_date=start_date,
+                           end_date=end_date)
 
 @tasks_bp.route('/employee/daily_task/edit/<int:task_id>', methods=['GET', 'POST'])
 def edit_daily_task(task_id):
@@ -225,9 +288,9 @@ def edit_daily_task(task_id):
         flash("Daily task not found or unauthorized.", "error")
         return redirect(url_for('tasks.employee_daily_tasks'))
 
-    # Check 24 hour limit using the template filter function logic
+    # Check edit window limit using same calendar day rule
     if not is_editable(task[5]):
-        flash("The editing window for this daily task has expired (24 hours limit reached).", "error")
+        flash("The editing window for this daily task has expired (only editable on the day of submission).", "error")
         return redirect(url_for('tasks.employee_daily_tasks'))
 
     statuses = db.get_task_statuses()
@@ -239,15 +302,47 @@ def edit_daily_task(task_id):
         title = request.form.get('task_title', '').strip()
         desc = request.form.get('task_desc', '').strip()
         project_status = request.form.get('project_status', '').strip()
+        task_hours = request.form.get('task_hours', '').strip()
 
-        if not title or not desc or not project_status:
+        if not title or not desc or not project_status or not task_hours:
             flash("All fields are required.", "error")
         else:
-            db.update_daily_task(task_id, session['user_id'], title, desc, project_status)
+            try:
+                hours_val = int(task_hours)
+                if hours_val <= 0 or hours_val > 24:
+                    raise ValueError
+            except ValueError:
+                flash("Hours must be a valid number between 1 and 24.", "error")
+                return render_template('tasks/edit_daily_task.html', task=task, statuses=statuses)
+
+            db.update_daily_task(task_id, session['user_id'], title, desc, project_status, hours_val)
             flash("Daily task updated successfully!", "success")
             return redirect(url_for('tasks.employee_daily_tasks'))
 
     return render_template('tasks/edit_daily_task.html', task=task, statuses=statuses)
+
+@tasks_bp.route('/employee/daily_task/delete/<int:task_id>', methods=['POST'])
+def delete_daily_task(task_id):
+    if 'user_id' not in session or session['emp_type'] != 'emp':
+        return redirect(url_for('auth.login'))
+
+    task = db.get_daily_task(task_id)
+    if not task or task[1] != session['user_id']:
+        flash("Daily task not found or unauthorized.", "error")
+        return redirect(url_for('tasks.employee_daily_tasks'))
+
+    # Check delete window limit using same calendar day rule
+    if not is_editable(task[5]):
+        flash("The deletion window for this daily task has expired (only deletable on the day of submission).", "error")
+        return redirect(url_for('tasks.employee_daily_tasks'))
+
+    try:
+        db.delete_daily_task(task_id, session['user_id'])
+        flash("Daily task deleted successfully!", "success")
+    except Exception as e:
+        flash("Error deleting daily task.", "error")
+
+    return redirect(url_for('tasks.employee_daily_tasks'))
 
 @tasks_bp.route('/admin/daily_tasks')
 def admin_daily_tasks():

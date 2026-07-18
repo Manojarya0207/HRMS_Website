@@ -613,25 +613,33 @@ class TaskMixin:
         return data
 
     # ---------- DAILY TASKS ----------
-    def add_daily_task(self, emp_id, title, desc, project_status):
+    def add_daily_task(self, emp_id, title, desc, project_status, task_hours):
         conn = self.get_connection()
         cursor = conn.cursor()
         cursor.execute('''
-            INSERT INTO tbl_daily_task (emp_id, task_title, task_desc, project_status)
-            VALUES (?, ?, ?, ?)
-        ''', (emp_id, title, desc, project_status))
+            INSERT INTO tbl_daily_task (emp_id, task_title, task_desc, project_status, task_hours)
+            VALUES (?, ?, ?, ?, ?)
+        ''', (emp_id, title, desc, project_status, task_hours))
         conn.commit()
         conn.close()
 
-    def get_daily_tasks_by_employee(self, emp_id):
+    def get_daily_tasks_by_employee(self, emp_id, start_date=None, end_date=None):
         conn = self.get_connection()
         cursor = conn.cursor()
-        cursor.execute('''
-            SELECT daily_task_id, emp_id, task_title, task_desc, project_status, inserted_date, admin_feedback
+        query = '''
+            SELECT daily_task_id, emp_id, task_title, task_desc, project_status, inserted_date, admin_feedback, task_hours
             FROM tbl_daily_task
             WHERE emp_id = ?
-            ORDER BY inserted_date DESC
-        ''', (emp_id,))
+        '''
+        params = [emp_id]
+        if start_date:
+            query += ' AND date(inserted_date) >= ?'
+            params.append(start_date)
+        if end_date:
+            query += ' AND date(inserted_date) <= ?'
+            params.append(end_date)
+        query += ' ORDER BY inserted_date DESC'
+        cursor.execute(query, params)
         data = cursor.fetchall()
         conn.close()
         return data
@@ -640,7 +648,7 @@ class TaskMixin:
         conn = self.get_connection()
         cursor = conn.cursor()
         cursor.execute('''
-            SELECT daily_task_id, emp_id, task_title, task_desc, project_status, inserted_date, admin_feedback
+            SELECT daily_task_id, emp_id, task_title, task_desc, project_status, inserted_date, admin_feedback, task_hours
             FROM tbl_daily_task
             WHERE daily_task_id = ?
         ''', (daily_task_id,))
@@ -648,14 +656,14 @@ class TaskMixin:
         conn.close()
         return data
 
-    def update_daily_task(self, daily_task_id, emp_id, title, desc, project_status):
+    def update_daily_task(self, daily_task_id, emp_id, title, desc, project_status, task_hours):
         conn = self.get_connection()
         cursor = conn.cursor()
         cursor.execute('''
             UPDATE tbl_daily_task
-            SET task_title = ?, task_desc = ?, project_status = ?
+            SET task_title = ?, task_desc = ?, project_status = ?, task_hours = ?
             WHERE daily_task_id = ? AND emp_id = ?
-        ''', (title, desc, project_status, daily_task_id, emp_id))
+        ''', (title, desc, project_status, task_hours, daily_task_id, emp_id))
         conn.commit()
         conn.close()
 
@@ -664,10 +672,10 @@ class TaskMixin:
         cursor = conn.cursor()
         cursor.execute('''
             SELECT dt.daily_task_id, dt.emp_id, dt.task_title, dt.task_desc, dt.project_status, dt.inserted_date, dt.admin_feedback,
-                   e.first_name, e.last_name
-            FROM tbl_daily_task dt
-            JOIN tbl_employee e ON dt.emp_id = e.emp_id
-            ORDER BY dt.inserted_date DESC
+                   e.first_name, e.last_name, dt.task_hours
+             FROM tbl_daily_task dt
+             JOIN tbl_employee e ON dt.emp_id = e.emp_id
+             ORDER BY dt.inserted_date DESC
         ''')
         data = cursor.fetchall()
         conn.close()
@@ -681,5 +689,15 @@ class TaskMixin:
             SET admin_feedback = ?
             WHERE daily_task_id = ?
         ''', (feedback, daily_task_id))
+        conn.commit()
+        conn.close()
+
+    def delete_daily_task(self, daily_task_id, emp_id):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute('''
+            DELETE FROM tbl_daily_task
+            WHERE daily_task_id = ? AND emp_id = ?
+        ''', (daily_task_id, emp_id))
         conn.commit()
         conn.close()
