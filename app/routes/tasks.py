@@ -350,7 +350,56 @@ def admin_daily_tasks():
         return redirect(url_for('auth.login'))
 
     daily_tasks = db.get_all_daily_tasks()
-    return render_template('tasks/admin_daily_tasks.html', daily_tasks=daily_tasks)
+
+    # Group daily tasks by employee and date (IST conversion)
+    grouped_tasks = {}
+    for task in daily_tasks:
+        emp_id = task[1]
+        first_name = task[7] or ''
+        last_name = task[8] or ''
+        emp_name = f"{first_name} {last_name}".strip()
+        if not emp_name:
+            emp_name = f"Employee {emp_id}"
+
+        dt_val = task[5]  # inserted_date
+        if isinstance(dt_val, str):
+            try:
+                dt = datetime.strptime(dt_val, "%Y-%m-%d %H:%M:%S")
+            except ValueError:
+                try:
+                    dt = datetime.strptime(dt_val, "%Y-%m-%d %H:%M:%S.%f")
+                except ValueError:
+                    dt = datetime.utcnow()
+        else:
+            dt = dt_val
+
+        # Convert to IST date
+        ist_dt = dt + timedelta(hours=5, minutes=30)
+        date_raw = ist_dt.strftime("%Y-%m-%d")
+        display_date = ist_dt.strftime("%d-%m-%Y")
+
+        key = (emp_id, date_raw)
+        if key not in grouped_tasks:
+            grouped_tasks[key] = {
+                'emp_id': emp_id,
+                'employee_name': emp_name,
+                'date': display_date,
+                'date_raw': date_raw,
+                'tasks': [],
+                'total_hours': 0,
+                'count': 0
+            }
+        grouped_tasks[key]['tasks'].append(task)
+        grouped_tasks[key]['total_hours'] += (task[9] or 0)
+        grouped_tasks[key]['count'] += 1
+
+    summary_list = list(grouped_tasks.values())
+    summary_list.sort(key=lambda x: (x['date_raw'], x['employee_name']), reverse=True)
+
+    return render_template('tasks/admin_daily_tasks.html',
+                           daily_tasks=daily_tasks,
+                           summary_list=summary_list)
+
 
 @tasks_bp.route('/admin/daily_task/feedback/<int:task_id>', methods=['POST'])
 def admin_daily_task_feedback(task_id):

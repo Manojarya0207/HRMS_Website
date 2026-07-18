@@ -75,90 +75,141 @@
                 </div>
             </div>
 
-            <div id="taskListContainer" class="divide-y divide-gray-100 px-6">
-                {% for task in daily_tasks %}
-                    <!-- Task card row -->
-                    <div class="task-row py-4 hover:bg-slate-50/40 transition duration-150" 
-                         data-employee="{{ task[7] }} {{ task[8] }}" 
-                         data-date="{{ (task[5]|format_ist)[:10] }}">
-                        <div class="flex items-start justify-between gap-4">
-                            <!-- Left Info -->
-                            <div class="flex-1 space-y-2">
-                                <div class="flex flex-wrap items-center gap-2">
-                                    <div class="flex items-center space-x-2">
-                                        <div class="w-7 h-7 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-xs border border-blue-100">
-                                            {{ task[7][0]|upper }}{{ task[8][0]|upper }}
-                                        </div>
-                                        <span class="font-semibold text-xs text-slate-800">{{ task[7] }} {{ task[8] }}</span>
+            {% if summary_list %}
+            <div class="overflow-x-auto px-6 py-4">
+                <table class="min-w-full divide-y divide-gray-200 border border-gray-200 rounded-lg overflow-hidden">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Sl No.</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Employee Name</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Number of task</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Number of Hours</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for summary in summary_list %}
+                        {% set is_highlighted = summary.total_hours < 8 %}
+                        <tr class="task-row transition duration-150 {% if is_highlighted %}bg-red-50/70 hover:bg-red-100/70 border-l-4 border-red-500{% else %}hover:bg-slate-50/50{% endif %}"
+                            data-employee="{{ summary.employee_name }}"
+                            data-date="{{ summary.date_raw }}">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">{{ loop.index }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-bold">
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-7 h-7 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-xs border border-blue-100">
+                                        {{ summary.employee_name[0]|upper if summary.employee_name else '?' }}
                                     </div>
-                                    <span class="text-slate-300 text-xs">|</span>
-                                    <span class="text-[11px] text-slate-500 flex items-center">
-                                        <i class="far fa-clock mr-1"></i> {{ task[5]|format_ist }}
-                                    </span>
-                                    <span class="text-slate-300 text-xs">|</span>
-                                    <span class="text-[11px] text-slate-500 flex items-center">
-                                        <i class="fas fa-hourglass-half mr-1"></i> Hours: {{ task[9] }}
-                                    </span>
-                                    <span class="text-slate-300 text-xs">|</span>
-                                    <!-- Project Status Badge -->
-                                    {% if task[4] == 'Completed' %}
+                                    <span>{{ summary.employee_name }}</span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-semibold">{{ summary.date }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ summary.count }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold {% if is_highlighted %}text-red-800{% else %}text-slate-800{% endif %}">
+                                {{ summary.total_hours }}
+                                {% if is_highlighted %}
+                                <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-red-100 text-red-800 animate-pulse border border-red-200">
+                                    Less than 8 hours
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <button type="button" onclick="toggleDetails({{ summary.emp_id }}, '{{ summary.date_raw }}', '{{ summary.employee_name|escape }}', '{{ summary.date }}')"
+                                    class="inline-flex items-center px-3 py-1.5 border border-teal-600 rounded-lg shadow-sm text-xs font-bold text-teal-600 hover:text-white hover:bg-teal-600 focus:outline-none transition">
+                                    View Details
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- View Details Section -->
+            <div id="details-section" class="mt-8 hidden border-t border-gray-100 pt-6 px-6 pb-6">
+                <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-info-circle mr-2 text-teal-600"></i> View Details - <span id="details-employee-title" class="text-slate-800 mr-2"></span> (<span id="details-date-title" class="text-teal-700"></span>)
+                </h3>
+                
+                {% for summary in summary_list %}
+                <div id="details-{{ summary.emp_id }}-{{ summary.date_raw }}" class="date-details-table hidden space-y-4">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200 border border-gray-200 rounded-lg overflow-hidden">
+                            <thead class="bg-slate-800 text-white">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider">Sl No.</th>
+                                    <th class="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider">Title</th>
+                                    <th class="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider">Description</th>
+                                    <th class="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider">Hours</th>
+                                    <th class="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider">Status</th>
+                                    <th class="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider">Feedback</th>
+                                    <th class="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                {% for task in summary.tasks %}
+                                <tr class="hover:bg-slate-50/50 transition duration-150">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">{{ loop.index }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">{{ task[2] }}</td>
+                                    <td class="px-6 py-4 text-sm text-gray-600 whitespace-pre-line">{{ task[3] }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-bold">{{ task[9] }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                        <!-- Project Status Badge -->
+                                        {% if task[4] == 'Completed' %}
                                         <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-green-50 text-green-700 border border-green-100">
                                             <span class="w-1 h-1 mr-1 rounded-full bg-green-500"></span>{{ task[4] }}
                                         </span>
-                                    {% elif task[4] == 'Work In Progress' or task[4] == 'In Progress' %}
+                                        {% elif task[4] == 'Work In Progress' or task[4] == 'In Progress' %}
                                         <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-blue-50 text-blue-700 border border-blue-100">
                                             <span class="w-1 h-1 mr-1 rounded-full bg-blue-500"></span>{{ task[4] }}
                                         </span>
-                                    {% elif task[4] == 'Blocked' %}
+                                        {% elif task[4] == 'Blocked' %}
                                         <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-red-50 text-red-700 border border-red-100">
                                             <span class="w-1 h-1 mr-1 rounded-full bg-red-500"></span>{{ task[4] }}
                                         </span>
-                                    {% elif task[4] == 'On Hold' %}
+                                        {% elif task[4] == 'On Hold' %}
                                         <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-50 text-slate-700 border border-slate-200">
                                             <span class="w-1 h-1 mr-1 rounded-full bg-slate-400"></span>{{ task[4] }}
                                         </span>
-                                    {% else %}
+                                        {% else %}
                                         <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-yellow-50 text-yellow-700 border border-yellow-100">
                                             <span class="w-1 h-1 mr-1 rounded-full bg-yellow-500"></span>{{ task[4] }}
                                         </span>
-                                    {% endif %}
-                                </div>
-
-                                <div class="bg-slate-50/60 rounded-lg p-3 border border-slate-100">
-                                    <h4 class="text-xs font-bold text-slate-800">{{ task[2] }}</h4>
-                                    <p class="mt-1 text-xs text-slate-900 whitespace-pre-line leading-relaxed">{{ task[3] }}</p>
-                                </div>
-
-
-                            </div>
-
-                            <!-- Right Info: Interactive Comment Icon (MNC style popup trigger) -->
-                            <div class="flex items-center justify-center flex-shrink-0 self-center">
-                                <button type="button" onclick="openFeedbackModal({{ task[0] }}, '{{ task[7] }} {{ task[8] }}', '{{ (task[6] if task[6] else '') | escape }}')" 
-                                    class="p-1.5 rounded hover:bg-slate-100 transition duration-150 flex flex-col items-center justify-center gap-0.5 group" 
-                                    title="Add/Edit Feedback">
-                                    {% if task[6] %}
-                                        <i class="fas fa-comment-dots text-lg text-teal-700 group-hover:scale-105 transition-transform duration-150"></i>
-                                        <span class="text-[8px] text-teal-700 font-bold uppercase tracking-wider">Has Feedback</span>
-                                    {% else %}
-                                        <i class="far fa-comment-dots text-lg text-slate-400 group-hover:text-slate-600 transition duration-150"></i>
-                                        <span class="text-[8px] text-slate-400 font-bold uppercase tracking-wider group-hover:text-slate-600">Add Feedback</span>
-                                    {% endif %}
-                                </button>
-                            </div>
-                        </div>
+                                        {% endif %}
+                                    </td>
+                                    <td class="px-6 py-4 text-sm text-gray-600 italic">
+                                        {{ task[6] if task[6] else 'No feedback yet' }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
+                                        <button type="button" onclick="openFeedbackModal({{ task[0] }}, '{{ summary.employee_name|escape }}', '{{ (task[6] if task[6] else '')|escape }}')" 
+                                            class="inline-flex items-center px-3 py-1.5 border border-teal-600 rounded-lg shadow-sm text-xs font-bold text-teal-600 hover:text-white hover:bg-teal-600 focus:outline-none transition group" 
+                                            title="Add/Edit Feedback">
+                                            {% if task[6] %}
+                                                <i class="fas fa-comment-dots mr-1.5 text-teal-600 group-hover:text-white transition duration-150"></i> Edit Feedback
+                                            {% else %}
+                                                <i class="far fa-comment-dots mr-1.5 text-teal-600 group-hover:text-white transition duration-150"></i> Add Feedback
+                                            {% endif %}
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
                     </div>
-                {% endfor %}
-                <!-- No matching tasks message -->
-                <div id="noTasksFilteredMessage" class="hidden text-center py-16">
-                    <div class="text-gray-300 mb-4 text-5xl">
-                        <i class="fas fa-search"></i>
-                    </div>
-                    <h4 class="text-lg font-bold text-gray-800">No matching daily task reports</h4>
-                    <p class="text-sm text-gray-500 mt-1">Try adjusting your filters to find the reports you are looking for.</p>
                 </div>
+                {% endfor %}
             </div>
-        {% else %}
+
+            <!-- No matching tasks message -->
+            <div id="noTasksFilteredMessage" class="hidden text-center py-16">
+                <div class="text-gray-300 mb-4 text-5xl">
+                    <i class="fas fa-search"></i>
+                </div>
+                <h4 class="text-lg font-bold text-gray-800">No matching daily task reports</h4>
+                <p class="text-sm text-gray-500 mt-1">Try adjusting your filters to find the reports you are looking for.</p>
+            </div>
+            {% endif %}
+            {% else %}
             <div class="text-center py-16">
                 <div class="text-gray-300 mb-4 text-5xl">
                     <i class="fas fa-tasks"></i>
@@ -166,7 +217,8 @@
                 <h4 class="text-lg font-bold text-gray-800">No daily task reports</h4>
                 <p class="text-sm text-gray-500 mt-1">Employees haven't submitted any daily reports yet.</p>
             </div>
-        {% endif %}
+            {% endif %}
+        </div>
     </div>
 </div>
 
@@ -230,6 +282,24 @@ function closeFeedbackModal() {
     document.getElementById('feedbackModal').classList.add('hidden');
 }
 
+function toggleDetails(empId, dateRaw, employeeName, dateFormatted) {
+    // Hide all tables
+    const tables = document.querySelectorAll('.date-details-table');
+    tables.forEach(t => t.classList.add('hidden'));
+
+    // Show selected table
+    const targetTable = document.getElementById('details-' + empId + '-' + dateRaw);
+    if (targetTable) {
+        targetTable.classList.remove('hidden');
+        document.getElementById('details-section').classList.remove('hidden');
+        document.getElementById('details-employee-title').innerText = employeeName;
+        document.getElementById('details-date-title').innerText = dateFormatted;
+
+        // Smooth scroll to the details section
+        document.getElementById('details-section').scrollIntoView({ behavior: 'smooth' });
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     const employeeFilter = document.getElementById('employeeFilter');
     const dateFilter = document.getElementById('dateFilter');
@@ -259,6 +329,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     row.style.display = 'none';
                 }
             });
+
+            // Hide details section on filter change to keep UI clean
+            document.getElementById('details-section').classList.add('hidden');
 
             if (visibleCount === 0 && taskRows.length > 0) {
                 noTasksMessage.classList.remove('hidden');
