@@ -186,14 +186,7 @@ def employee_daily_tasks():
         return redirect(url_for('auth.login'))
 
     profile = db.get_employee_profile(session['user_id'])
-    emg_missing = (
-        not profile
-        or not profile.get('EmgContact')
-        or profile.get('EmgUpdatedByEmp') == 0
-    )
-    if emg_missing:
-        flash("Please update your emergency contact before accessing this page.", "error")
-        return redirect(url_for('employees.employee_dashboard'))
+
 
     statuses = db.get_task_statuses()
 

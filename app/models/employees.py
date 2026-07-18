@@ -18,6 +18,13 @@ class EmployeeMixin:
               data['status'], data['emp_type'], data.get('department')))
 
         emmpp = cursor.lastrowid
+        # Automatically insert profile row
+        cursor.execute("SELECT COUNT(*) FROM TblEmployeeProfile WHERE EmployeeId = ?", (emmpp,))
+        if cursor.fetchone()[0] == 0:
+            cursor.execute('''
+                INSERT INTO TblEmployeeProfile (EmployeeId, EmgUpdatedByEmp)
+                VALUES (?, 0)
+            ''', (emmpp,))
         conn.commit()
         conn.close()
         return emmpp
@@ -202,25 +209,34 @@ class EmployeeMixin:
             ))
 
     def update_employee_password_and_emgcontact(self, emp_id, new_password, emg_contact):
-        if new_password or new_password is not None:
-            with self.get_connection() as conn:
-                cursor = conn.cursor()
+        new_password = new_password.strip() if new_password else None
+        emg_contact = emg_contact.strip() if emg_contact else None
+
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Check if profile exists, if not, create it
+            cursor.execute("SELECT COUNT(*) FROM TblEmployeeProfile WHERE EmployeeId = ?", (emp_id,))
+            if cursor.fetchone()[0] == 0:
+                cursor.execute("INSERT INTO TblEmployeeProfile (EmployeeId, EmgUpdatedByEmp) VALUES (?, 0)", (emp_id,))
+            
+            if new_password and emg_contact:
                 hashed = self.hash_password(new_password)
                 cursor.execute('UPDATE tbl_employee SET password = ? WHERE emp_id = ?', (hashed, emp_id))
-            return "Password updated successfully."
-        elif not new_password or new_password is None:
-            with self.get_connection() as conn:
-                cursor = conn.cursor()
-                hashed = self.hash_password(new_password)
-                cursor.execute('UPDATE TblEmployeeProfile SET EmgContact = ? WHERE EmployeeID = ?', (emg_contact, emp_id))
-            return "Emergency contact updated successfully."
-        else:
-            with self.get_connection() as conn:
-                cursor = conn.cursor()
+                cursor.execute('UPDATE TblEmployeeProfile SET EmgContact = ? WHERE EmployeeId = ?', (emg_contact, emp_id))
+                conn.commit()
+                return "Emergency contact and password updated successfully."
+            elif new_password:
                 hashed = self.hash_password(new_password)
                 cursor.execute('UPDATE tbl_employee SET password = ? WHERE emp_id = ?', (hashed, emp_id))
-                cursor.execute('UPDATE TblEmployeeProfile SET EmgContact = ? WHERE EmployeeID = ?', (emg_contact, emp_id))
-            return "Emergency contact and password updated successfully."
+                conn.commit()
+                return "Password updated successfully."
+            elif emg_contact:
+                cursor.execute('UPDATE TblEmployeeProfile SET EmgContact = ? WHERE EmployeeId = ?', (emg_contact, emp_id))
+                conn.commit()
+                return "Emergency contact updated successfully."
+            else:
+                return "No changes made."
 
     def update_employee_emg_contact_once(self, emp_id, new_emg):
         with self.get_connection() as conn:

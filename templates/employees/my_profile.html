@@ -43,14 +43,14 @@
         <!-- Password -->
         <div>
             <label class=" text-sm font-medium text-gray-700 mb-1">New Password</label>
-            <input required type="password" name="password"
+            <input type="password" name="password"
                 class="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-blue-500" />
         </div>
         <!-- Emergency Contact -->
         <div>
             <label class=" text-sm font-medium text-gray-700 mb-1">Emergency Contact (10-digit, can update only
                 once)</label>
-            <input type="text" required name="EmgContact" value="{{ profile['EmgContact'] if profile else '' }}" {% if
+            <input type="text" name="EmgContact" value="{{ profile['EmgContact'] if profile else '' }}" {% if
                 profile and profile['EmgUpdatedByEmp'] %} readonly
                 class="w-full p-2 border rounded-md bg-gray-100 text-gray-500" {% else %}
                 class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500" {% endif %} />
@@ -78,29 +78,31 @@
         const emgInput = document.querySelector("input[name='EmgContact']");
         const emgContact = emgInput.value.trim();
 
-        if (emgContact.length !== 10 || !/^\d{10}$/.test(emgContact)) {
-            e.preventDefault();
-            Toastify({
-                text: "Emergency contact must be a 10-digit number.",
-                duration: 3000,
-                close: true,
-                gravity: "top",
-                position: "right",
-                backgroundColor: "#f56565", // red
-            }).showToast();
-            return;
-        }
+        if (emgContact !== "") {
+            if (emgContact.length !== 10 || !/^\d{10}$/.test(emgContact)) {
+                e.preventDefault();
+                Toastify({
+                    text: "Emergency contact must be a 10-digit number.",
+                    duration: 3000,
+                    close: true,
+                    gravity: "top",
+                    position: "right",
+                    backgroundColor: "#f56565", // red
+                }).showToast();
+                return;
+            }
 
-        if (emgContact === mobile) {
-            e.preventDefault();
-            Toastify({
-                text: "Emergency contact number cannot be the same as your mobile number.",
-                duration: 3000,
-                close: true,
-                gravity: "top",
-                position: "right",
-                backgroundColor: "#f56565", // red
-            }).showToast();
+            if (emgContact === mobile) {
+                e.preventDefault();
+                Toastify({
+                    text: "Emergency contact number cannot be the same as your mobile number.",
+                    duration: 3000,
+                    close: true,
+                    gravity: "top",
+                    position: "right",
+                    backgroundColor: "#f56565", // red
+                }).showToast();
+            }
         }
     });
 </script>

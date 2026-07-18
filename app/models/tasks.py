@@ -568,7 +568,7 @@ class TaskMixin:
             FROM tbl_employee e
             LEFT JOIN tbl_task t ON e.emp_id = t.emp_id
             LEFT JOIN tbl_project p ON t.project_id = p.project_id
-            WHERE e.emp_type = 'emp' AND e.status = 'active'
+            WHERE e.emp_type = 'emp' AND e.status != 'inactive'
         '''
         params = []
         if project_filter:

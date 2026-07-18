@@ -202,7 +202,7 @@ def employee_dashboard():
         or profile.get('EmgUpdatedByEmp') == 0
     )
 
-    session['emg_missing'] = emg_missing  # Used by base.html sidebar
+    session['emg_missing'] = False  # Ensure sidebar links are never disabled
 
     status_filter = request.args.get('status_filter', 'all')
     tasks = db.get_tasks_by_employee(session['user_id'], status_filter=status_filter)

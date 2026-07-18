@@ -418,7 +418,7 @@
                     </details>
 
                     {% else %}
-                    {% set disabled = 'pointer-events-none opacity-50' if emg_missing else '' %}
+                    {% set disabled = '' %}
                     <div>
                         {{ navlink('Daily Tasks','fas fa-calendar-check','tasks.employee_daily_tasks') }}
                         {{ navlink('Manage Expense','fas fa-money-bill-wave','expenses.expense') }}

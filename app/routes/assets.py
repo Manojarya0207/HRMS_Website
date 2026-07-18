@@ -66,7 +66,7 @@ def allocate_asset():
 
     conn = get_db_connection()
     assets = conn.execute("SELECT * FROM TblAssets WHERE Status = 'Available'").fetchall()
-    employees = conn.execute("SELECT emp_id, first_name, last_name FROM tbl_employee WHERE status = 'active'").fetchall()
+    employees = conn.execute("SELECT emp_id, first_name, last_name FROM tbl_employee WHERE status != 'inactive'").fetchall()
 
     selected_asset_id = request.args.get('asset_id', type=int)
 
@@ -135,7 +135,7 @@ def edit_allocation(alloc_id):
 def asset_history():
     selected_emp_id = request.args.get('employee_id', type=int)
     conn = get_db_connection()
-    employees = conn.execute("SELECT emp_id, first_name, last_name FROM tbl_employee WHERE Status = 'active'").fetchall()
+    employees = conn.execute("SELECT emp_id, first_name, last_name FROM tbl_employee WHERE status != 'inactive'").fetchall()
     history = []
     if selected_emp_id:
         history = conn.execute('''
