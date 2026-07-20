@@ -76,11 +76,17 @@
                         class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm">
                 </div>
 
-                <!-- Email -->
+                <!-- Email Address (Login ID) -->
                 <div>
-                    <label for="email" class="block text-sm font-medium text-gray-700">Email Address (Login ID)</label>
+                    <div class="flex justify-between items-center">
+                        <label for="email" class="block text-sm font-medium text-gray-700">Login ID</label>
+                        <button type="button" onclick="updateAddEmpAutoLoginId(true)" class="text-xs font-semibold text-teal-600 hover:text-teal-800 focus:outline-none">
+                            <i class="fas fa-magic mr-1"></i>Auto-Generate
+                        </button>
+                    </div>
                     <input type="text" name="email" id="email" required value="{{ prefill.email or '' }}"
-                        class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm">
+                        class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm font-mono uppercase tracking-wide"
+                        placeholder="e.g. MANO3210">
                 </div>
 
                 <!-- Password -->
@@ -142,4 +148,55 @@
         </form>
     </div>
 </div>
+
+<script>
+    let isAddEmpLoginIdEdited = false;
+
+    function generateAddEmpLoginId() {
+        const fn = (document.getElementById('first_name').value || '').trim();
+        const ln = (document.getElementById('last_name').value || '').trim();
+        const phone = (document.getElementById('phone_no').value || '').trim();
+
+        const combinedName = (fn + ln).replace(/[^a-zA-Z]/g, '').toUpperCase();
+        let namePart = combinedName.substring(0, 4);
+        if (!namePart) namePart = 'EMP';
+
+        const digits = phone.replace(/\D/g, '');
+        const phonePart = digits.length >= 4 ? digits.substring(0, 4) : digits;
+
+        return namePart + phonePart;
+    }
+
+    function updateAddEmpAutoLoginId(force = false) {
+        const emailInput = document.getElementById('email');
+        if (!isAddEmpLoginIdEdited || force || !emailInput.value) {
+            const genId = generateAddEmpLoginId();
+            if (genId && genId !== 'EMP') {
+                emailInput.value = genId;
+                if (force) isAddEmpLoginIdEdited = false;
+            }
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const fnInput = document.getElementById('first_name');
+        const lnInput = document.getElementById('last_name');
+        const phoneInput = document.getElementById('phone_no');
+        const emailInput = document.getElementById('email');
+
+        if (fnInput) fnInput.addEventListener('input', () => updateAddEmpAutoLoginId(false));
+        if (lnInput) lnInput.addEventListener('input', () => updateAddEmpAutoLoginId(false));
+        if (phoneInput) phoneInput.addEventListener('input', () => updateAddEmpAutoLoginId(false));
+
+        if (emailInput) {
+            emailInput.addEventListener('input', () => {
+                isAddEmpLoginIdEdited = true;
+            });
+            // If email is empty on load, attempt auto-generation
+            if (!emailInput.value) {
+                updateAddEmpAutoLoginId(false);
+            }
+        }
+    });
+</script>
 {% endblock %}

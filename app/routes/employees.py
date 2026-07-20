@@ -158,7 +158,11 @@ def add_employee():
                 'department': req_data[9]
             }
 
-    if request.method == 'POST':
+        email_val = request.form.get('email', '').strip()
+        if not email_val:
+            from app.utils import generate_login_id
+            email_val = generate_login_id(request.form['first_name'], request.form['last_name'], request.form['phone_no'])
+
         employee_data = {
             'first_name': request.form['first_name'],
             'last_name': request.form['last_name'],
@@ -166,7 +170,7 @@ def add_employee():
             'dob': request.form['dob'],
             'address': request.form['address'],
             'phone_no': request.form['phone_no'],
-            'email': request.form['email'],
+            'email': email_val,
             'password': request.form['password'],
             'status': request.form['status'],
             'emp_type': request.form['emp_type'],
@@ -180,7 +184,7 @@ def add_employee():
             flash('Employee added successfully!', 'success')
             return redirect(url_for('employees.manage_profile', emp_id=emp_id))
         except Exception as e:
-            flash('Error adding employee. Email might already exist.', 'error')
+            flash('Error adding employee. Login ID might already exist.', 'error')
             prefill = employee_data
 
     employee_statuses = db.get_employee_statuses()

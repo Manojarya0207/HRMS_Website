@@ -30,7 +30,11 @@ def register():
         dob = request.form['dob']
         address = request.form['address']
         phone_no = request.form['phone_no']
-        email = request.form['email']
+        email = request.form.get('email', '').strip()
+        if not email:
+            from app.utils import generate_login_id
+            email = generate_login_id(first_name, last_name, phone_no)
+
         password = request.form['password']
         department = request.form['department']
 
@@ -49,7 +53,7 @@ def register():
             flash('Registration request submitted successfully! Pending admin approval.', 'success')
             return redirect(url_for('auth.login'))
         except Exception as e:
-            flash('Error submitting registration request. Email may already exist.', 'error')
+            flash('Error submitting registration request. Login ID may already exist.', 'error')
 
     return render_template('auth/register.html')
 
@@ -57,7 +61,7 @@ def register():
 def api_check_registration_status():
     email = request.json.get('email', '').strip()
     if not email:
-        return jsonify({'success': False, 'message': 'Email is required'}), 400
+        return jsonify({'success': False, 'message': 'Login ID is required'}), 400
 
     conn = db.get_connection()
     cursor = conn.cursor()
@@ -72,7 +76,7 @@ def api_check_registration_status():
     conn.close()
 
     if not row:
-        return jsonify({'success': False, 'message': 'No registration request found for this email address.'})
+        return jsonify({'success': False, 'message': 'No registration request found for this Login ID.'})
 
     first_name, last_name, status, inserted_date, department = row
     return jsonify({
@@ -87,7 +91,7 @@ def api_check_registration_status():
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        email = request.form['email']
+        email = request.form.get('email', '').strip()
         password = request.form['password']
 
         user = db.verify_user(email, password)
@@ -103,7 +107,7 @@ def login():
             else:
                 return redirect(url_for('employees.employee_profile_view'))
         else:
-            flash('Invalid email or password', 'error')
+            flash('Invalid Login ID or password', 'error')
 
     return render_template('auth/login.html')
 
