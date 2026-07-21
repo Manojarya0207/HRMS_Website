@@ -158,22 +158,27 @@ def add_employee():
                 'department': req_data[9]
             }
 
+    if request.method == 'POST':
         email_val = request.form.get('email', '').strip()
         if not email_val:
             from app.utils import generate_login_id
-            email_val = generate_login_id(request.form['first_name'], request.form['last_name'], request.form['phone_no'])
+            email_val = generate_login_id(
+                request.form.get('first_name', ''),
+                request.form.get('last_name', ''),
+                request.form.get('phone_no', '')
+            )
 
         employee_data = {
-            'first_name': request.form['first_name'],
-            'last_name': request.form['last_name'],
-            'gender': request.form['gender'],
-            'dob': request.form['dob'],
-            'address': request.form['address'],
-            'phone_no': request.form['phone_no'],
+            'first_name': request.form.get('first_name', ''),
+            'last_name': request.form.get('last_name', ''),
+            'gender': request.form.get('gender', ''),
+            'dob': request.form.get('dob', ''),
+            'address': request.form.get('address', ''),
+            'phone_no': request.form.get('phone_no', ''),
             'email': email_val,
-            'password': request.form['password'],
-            'status': request.form['status'],
-            'emp_type': request.form['emp_type'],
+            'password': request.form.get('password', ''),
+            'status': request.form.get('status', 'Active'),
+            'emp_type': request.form.get('emp_type', 'emp'),
             'department': request.form.get('department')
         }
 
@@ -184,7 +189,7 @@ def add_employee():
             flash('Employee added successfully!', 'success')
             return redirect(url_for('employees.manage_profile', emp_id=emp_id))
         except Exception as e:
-            flash('Error adding employee. Login ID might already exist.', 'error')
+            flash(f'Error adding employee: {str(e)}', 'error')
             prefill = employee_data
 
     employee_statuses = db.get_employee_statuses()
